@@ -1,20 +1,16 @@
 let board, score = 0;
 const size = 4;
 
-const BASE_CHAIN_ID = "0x2105"; // Base Mainnet (hex)
+const BASE_CHAIN_ID = 8453; // decimal format
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const CONTRACT_ABI = [
-  "function gm() public",
-  "function submitScore(uint256 score, string memory playerName) public",
-  "function getTopScores() public view returns (tuple(address player, uint256 score, string name)[])"
+  "function gm(string name, uint256 score) external",
 ];
 
-// RPC اختصاصی شما
 const provider = new ethers.JsonRpcProvider("https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1");
 let signer, contract;
 
-// ---------------- GAME CORE ----------------
-
+// ----------- GAME CORE -----------
 function initGame() {
   board = Array.from({ length: size }, () => Array(size).fill(0));
   score = 0;
@@ -83,8 +79,7 @@ function showGameOver() {
   document.getElementById("scoreForm").style.display = "block";
 }
 
-// ---------------- CONTROLS ----------------
-
+// ----------- CONTROLS -----------
 function move(direction) {
   const prev = JSON.stringify(board);
   switch (direction) {
@@ -113,7 +108,6 @@ function move(direction) {
 }
 
 function setupKeyboardAndTouch() {
-  // Keyboard
   document.onkeydown = (e) => {
     switch (e.key) {
       case "ArrowLeft": move("left"); break;
@@ -123,7 +117,6 @@ function setupKeyboardAndTouch() {
     }
   };
 
-  // Touch
   let startX, startY;
   document.addEventListener("touchstart", (e) => {
     const touch = e.touches[0];
@@ -147,33 +140,27 @@ function setupKeyboardAndTouch() {
   }, { passive: true });
 }
 
-// ---------------- WALLET ----------------
-
+// ----------- WALLET + GM -----------
 async function connectWallet() {
-  if (!window.ethereum) return alert("🦊 لطفاً متامسک یا Rabby نصب کن");
+  if (!window.ethereum) return alert("🦊 Please install MetaMask or Rabby");
 
-  const chainId = "0x2105"; // Base Mainnet
-
+  const chainIdHex = "0x2105";
   try {
-    // درخواست اتصال به کیف پول
     await window.ethereum.request({ method: "eth_requestAccounts" });
+    const current = await window.ethereum.request({ method: "eth_chainId" });
 
-    // چک شبکه
-    const currentChain = await window.ethereum.request({ method: "eth_chainId" });
-    if (currentChain !== chainId) {
+    if (current !== chainIdHex) {
       try {
-        // سوییچ شبکه به Base
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
-          params: [{ chainId }],
+          params: [{ chainId: chainIdHex }],
         });
-      } catch (switchError) {
-        // اگه شبکه Base وجود نداشت، اضافه‌ش کن
-        if (switchError.code === 4902) {
+      } catch (err) {
+        if (err.code === 4902) {
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
             params: [{
-              chainId,
+              chainId: chainIdHex,
               chainName: "Base Mainnet",
               rpcUrls: ["https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1"],
               nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
@@ -181,87 +168,46 @@ async function connectWallet() {
             }]
           });
         } else {
-          throw switchError;
+          throw err;
         }
       }
     }
 
     const browserProvider = new ethers.BrowserProvider(window.ethereum);
     signer = await browserProvider.getSigner();
-    const userAddress = await signer.getAddress();
-
-    // مقداردهی اولیه قرارداد
     contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-    document.getElementById("connectWalletBtn").innerText = `🟢 ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+    const address = await signer.getAddress();
+    document.getElementById("connectWalletBtn").innerText = `🟢 ${address.slice(0, 6)}...${address.slice(-4)}`;
     document.getElementById("connectWalletBtn").disabled = true;
-
   } catch (err) {
-    alert("❌ خطا در اتصال به کیف پول: " + (err.message || err));
+    alert("❌ Wallet Error: " + (err.message || err));
   }
 }
-
-// ---------------- INTERACTIONS ----------------
 
 async function sendGM() {
-  if (!contract || !signer) return alert("⛔ اول کیف پولتو وصل کن");
+  if (!contract || !signer) return alert("⛔ Wallet not connected");
 
   const network = await signer.provider.getNetwork();
-  if (network.chainId !== 8453) {
-    return alert("⚠️ لطفاً روی شبکه Base Mainnet باشی");
+  if (Number(network.chainId) !== BASE_CHAIN_ID) {
+    return alert("⚠️ Please switch to Base Mainnet");
   }
 
   try {
-    const tx = await contract.gm();
+    const playerName = prompt("👤 Enter your name:") || "anon";
+    const tx = await contract.gm(playerName, score);
     await tx.wait();
-    alert("🌞 GM ثبت شد!");
+    alert("🌞 GM submitted onchain!");
   } catch (err) {
-    alert("❌ خطا در GM: " + (err.reason || err.message));
+    alert("❌ GM Error: " + (err.reason || err.message));
   }
 }
 
-async function submitScoreHandler(e) {
-  e.preventDefault();
-  const name = document.getElementById("playerName").value.trim();
-  if (!name || score === 0) return alert("نام یا امتیاز نامعتبره");
-  if (!contract) return alert("⛔ اول کیف پولتو وصل کن");
-
-  try {
-    const tx = await contract.submitScore(score, name);
-    await tx.wait();
-    alert("✅ امتیاز ثبت شد!");
-    initGame();
-  } catch (err) {
-    alert("❌ خطا در ثبت امتیاز: " + (err.reason || err.message));
-  }
-}
-
-async function toggleLeaderboard() {
-  if (!contract) return alert("⛔ اول کیف پولتو وصل کن");
-  const board = document.getElementById("leaderboard");
-  if (board.style.display === "none") {
-    try {
-      const scores = await contract.getTopScores();
-      board.innerHTML = "<h3>🏆 Leaderboard</h3><ul>" + scores.map((s, i) =>
-        `<li>#${i + 1} - ${s.name || "(unknown)"}: ${s.score}</li>`
-      ).join("") + "</ul>";
-      board.style.display = "block";
-    } catch (err) {
-      alert("❌ خطا در گرفتن لیدربرد: " + (err.reason || err.message));
-    }
-  } else {
-    board.style.display = "none";
-  }
-}
-
-// ---------------- INIT ----------------
-
+// ----------- INIT -----------
 window.onload = () => {
   initGame();
   setupKeyboardAndTouch();
 
   document.getElementById("connectWalletBtn").onclick = connectWallet;
   document.getElementById("gmButton").onclick = sendGM;
-  document.getElementById("scoreForm").addEventListener("submit", submitScoreHandler);
-  document.getElementById("leaderboardToggle").onclick = toggleLeaderboard;
 };
