@@ -1,16 +1,18 @@
 let board, score = 0;
 const size = 4;
 
-const BASE_CHAIN_ID = 8453; // decimal format
+const BASE_CHAIN_ID = "0x2105"; // Base Mainnet (hex)
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const CONTRACT_ABI = [
+  "event GM(string name, uint256 score, address player, uint256 timestamp)",
   "function gm(string name, uint256 score) external",
 ];
 
-const provider = new ethers.JsonRpcProvider("https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1");
+const provider = new ethers.providers.JsonRpcProvider("https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1");
 let signer, contract;
 
-// ----------- GAME CORE -----------
+// ---------- GAME LOGIC ----------
+
 function initGame() {
   board = Array.from({ length: size }, () => Array(size).fill(0));
   score = 0;
@@ -79,16 +81,13 @@ function showGameOver() {
   document.getElementById("scoreForm").style.display = "block";
 }
 
-// ----------- CONTROLS -----------
+// ---------- CONTROLS ----------
+
 function move(direction) {
   const prev = JSON.stringify(board);
   switch (direction) {
-    case "left":
-      board = board.map(row => slideAndCombine(row));
-      break;
-    case "right":
-      board = board.map(row => slideAndCombine(row.reverse()).reverse());
-      break;
+    case "left": board = board.map(row => slideAndCombine(row)); break;
+    case "right": board = board.map(row => slideAndCombine(row.reverse()).reverse()); break;
     case "up":
       board = rotateCounterClockwise(board);
       board = board.map(row => slideAndCombine(row));
@@ -107,7 +106,7 @@ function move(direction) {
   }
 }
 
-function setupKeyboardAndTouch() {
+function setupControls() {
   document.onkeydown = (e) => {
     switch (e.key) {
       case "ArrowLeft": move("left"); break;
@@ -119,95 +118,135 @@ function setupKeyboardAndTouch() {
 
   let startX, startY;
   document.addEventListener("touchstart", (e) => {
-    const touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
   }, { passive: true });
 
   document.addEventListener("touchend", (e) => {
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - startX;
-    const dy = touch.clientY - startY;
-    const absX = Math.abs(dx);
-    const absY = Math.abs(dy);
-    if (Math.max(absX, absY) > 30) {
-      if (absX > absY) {
-        dx > 0 ? move("right") : move("left");
-      } else {
-        dy > 0 ? move("down") : move("up");
-      }
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) > 30) {
+      if (Math.abs(dx) > Math.abs(dy)) dx > 0 ? move("right") : move("left");
+      else dy > 0 ? move("down") : move("up");
     }
   }, { passive: true });
 }
 
-// ----------- WALLET + GM -----------
-async function connectWallet() {
-  if (!window.ethereum) return alert("🦊 Please install MetaMask or Rabby");
+// ---------- WALLET ----------
 
-  const chainIdHex = "0x2105";
+async function connectWallet() {
+  if (!window.ethereum) return alert("🦊 Install MetaMask or Rabby");
+
+  const chainId = BASE_CHAIN_ID;
+
   try {
     await window.ethereum.request({ method: "eth_requestAccounts" });
-    const current = await window.ethereum.request({ method: "eth_chainId" });
+    const currentChain = await window.ethereum.request({ method: "eth_chainId" });
 
-    if (current !== chainIdHex) {
+    if (currentChain !== chainId) {
       try {
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
-          params: [{ chainId: chainIdHex }],
+          params: [{ chainId }]
         });
       } catch (err) {
         if (err.code === 4902) {
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
             params: [{
-              chainId: chainIdHex,
+              chainId,
               chainName: "Base Mainnet",
-              rpcUrls: ["https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1"],
+              rpcUrls: [provider.connection.url],
               nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
               blockExplorerUrls: ["https://basescan.org"]
             }]
           });
-        } else {
-          throw err;
-        }
+        } else throw err;
       }
     }
 
-    const browserProvider = new ethers.BrowserProvider(window.ethereum);
-    signer = await browserProvider.getSigner();
+    const browserProvider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = browserProvider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
     const address = await signer.getAddress();
     document.getElementById("connectWalletBtn").innerText = `🟢 ${address.slice(0, 6)}...${address.slice(-4)}`;
     document.getElementById("connectWalletBtn").disabled = true;
+
   } catch (err) {
-    alert("❌ Wallet Error: " + (err.message || err));
+    alert("❌ Wallet error: " + (err.message || err));
   }
 }
+
+// ---------- INTERACTIONS ----------
 
 async function sendGM() {
-  if (!contract || !signer) return alert("⛔ Wallet not connected");
-
+  if (!signer || !contract) return alert("⛔ Connect wallet first");
   const network = await signer.provider.getNetwork();
-  if (Number(network.chainId) !== BASE_CHAIN_ID) {
-    return alert("⚠️ Please switch to Base Mainnet");
-  }
+  if (network.chainId !== 8453) return alert("⚠️ You must be on Base Mainnet");
 
   try {
-    const playerName = prompt("👤 Enter your name:") || "anon";
-    const tx = await contract.gm(playerName, score);
+    const tx = await contract.gm("GM to Iman", 0);
     await tx.wait();
-    alert("🌞 GM submitted onchain!");
+    alert("🌞 GM sent!");
   } catch (err) {
-    alert("❌ GM Error: " + (err.reason || err.message));
+    alert("❌ GM failed: " + (err.reason || err.message));
   }
 }
 
-// ----------- INIT -----------
+async function submitScoreHandler(e) {
+  e.preventDefault();
+  const name = document.getElementById("playerName").value.trim();
+  if (!name || score === 0) return alert("❗ Invalid name or score");
+  if (!contract) return alert("⛔ Connect wallet first");
+
+  try {
+    const tx = await contract.gm(name, score);
+    await tx.wait();
+    alert("✅ Score submitted!");
+    initGame(); // Reset game after transaction
+  } catch (err) {
+    alert("❌ Submit failed: " + (err.reason || err.message));
+  }
+}
+
+async function loadLeaderboard() {
+  const board = document.getElementById("leaderboard");
+  board.innerHTML = "<h3>🏆 Leaderboard</h3><p>Loading...</p>";
+  board.style.display = "block";
+
+  try {
+    const filter = contract.filters.GM();
+    const logs = await provider.getLogs({
+      fromBlock: 0,
+      toBlock: "latest",
+      address: CONTRACT_ADDRESS,
+      topics: filter.topics
+    });
+
+    const iface = new ethers.utils.Interface(CONTRACT_ABI);
+    const parsed = logs.map(log => iface.parseLog(log).args);
+    const scores = parsed.map(args => ({
+      name: args.name,
+      score: args.score.toNumber(),
+      player: args.player
+    })).sort((a, b) => b.score - a.score).slice(0, 10);
+
+    board.innerHTML = "<h3>🏆 Leaderboard</h3><ul>" + scores.map((s, i) =>
+      `<li>#${i + 1} - ${s.name || "(anon)"}: ${s.score}</li>`
+    ).join("") + "</ul>";
+
+  } catch (err) {
+    board.innerHTML = "<p>❌ Failed to load leaderboard</p>";
+  }
+}
+
+// ---------- INIT ----------
+
 window.onload = () => {
   initGame();
-  setupKeyboardAndTouch();
-
+  setupControls();
   document.getElementById("connectWalletBtn").onclick = connectWallet;
   document.getElementById("gmButton").onclick = sendGM;
+  document.getElementById("scoreForm").addEventListener("submit", submitScoreHandler);
+  document.getElementById("leaderboardToggle").onclick = loadLeaderboard;
 };
