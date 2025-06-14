@@ -152,27 +152,65 @@ function setupKeyboardAndTouch() {
 async function connectWallet() {
   if (!window.ethereum) return alert("🦊 لطفاً متامسک یا Rabby نصب کن");
 
-  const browserProvider = new ethers.BrowserProvider(window.ethereum);
-  await browserProvider.send("eth_requestAccounts", []);
-  signer = await browserProvider.getSigner();
-  const userAddress = await signer.getAddress();
+  const chainId = "0x2105"; // Base Mainnet
 
-  document.getElementById("connectWalletBtn").innerText = `🟢 ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
-  document.getElementById("connectWalletBtn").disabled = true;
+  try {
+    // درخواست اتصال به کیف پول
+    await window.ethereum.request({ method: "eth_requestAccounts" });
 
-  const network = await browserProvider.getNetwork();
-  if (network.chainId !== parseInt(BASE_CHAIN_ID, 16)) {
-    alert("🛑 لطفاً شبکه Base رو انتخاب کن");
-    return;
+    // چک شبکه
+    const currentChain = await window.ethereum.request({ method: "eth_chainId" });
+    if (currentChain !== chainId) {
+      try {
+        // سوییچ شبکه به Base
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId }],
+        });
+      } catch (switchError) {
+        // اگه شبکه Base وجود نداشت، اضافه‌ش کن
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId,
+              chainName: "Base Mainnet",
+              rpcUrls: ["https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1"],
+              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+              blockExplorerUrls: ["https://basescan.org"]
+            }]
+          });
+        } else {
+          throw switchError;
+        }
+      }
+    }
+
+    const browserProvider = new ethers.BrowserProvider(window.ethereum);
+    signer = await browserProvider.getSigner();
+    const userAddress = await signer.getAddress();
+
+    // مقداردهی اولیه قرارداد
+    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+    document.getElementById("connectWalletBtn").innerText = `🟢 ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+    document.getElementById("connectWalletBtn").disabled = true;
+
+  } catch (err) {
+    alert("❌ خطا در اتصال به کیف پول: " + (err.message || err));
   }
-
-  contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 }
 
 // ---------------- INTERACTIONS ----------------
 
 async function sendGM() {
-  if (!contract) return alert("⛔ اول کیف پولتو وصل کن");
+  if (!contract || !signer) return alert("⛔ اول کیف پولتو وصل کن");
+
+  const network = await signer.provider.getNetwork();
+  if (network.chainId !== 8453) {
+    return alert("⚠️ لطفاً روی شبکه Base Mainnet باشی");
+  }
+
   try {
     const tx = await contract.gm();
     await tx.wait();
