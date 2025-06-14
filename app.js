@@ -1,95 +1,19 @@
-/*
- * =========================================
- * Purple 2048 - Main Application Logic
- * Consolidated and Final Version
- * =========================================
- */
-
-// -----------------------------------
-// SECTION 1: CORE VARIABLES & CONFIG
-// -----------------------------------
 let board, score = 0;
 const size = 4;
-const BASE_CHAIN_ID = "0x2105"; // Hex for 8453 (Base Mainnet)
 
-// Your provided contract address
+const BASE_CHAIN_ID = "0x2105"; // Base Mainnet (hex)
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
-
 const CONTRACT_ABI = [
   "function gm() public",
   "function submitScore(uint256 score, string memory playerName) public",
   "function getTopScores() public view returns (tuple(address player, uint256 score, string name)[])"
 ];
 
-// Global variables for wallet connection
-window.signer = null;
-window.contract = null;
+// RPC اختصاصی شما
+const provider = new ethers.JsonRpcProvider("https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1");
+let signer, contract;
 
-// -----------------------------------
-// SECTION 2: WALLET & BLOCKCHAIN LOGIC
-// -----------------------------------
-
-// Network parameters using your dedicated Alchemy RPC
-const BASE_PARAMS = {
-  chainId: BASE_CHAIN_ID,
-  chainName: "Base Mainnet",
-  nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-  rpcUrls: ["https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1"], // Your dedicated RPC URL
-  blockExplorerUrls: ["https://basescan.org"],
-};
-
-async function connectWallet() {
-  if (typeof window.ethereum === "undefined") {
-    return alert("Please install a Web3 wallet like MetaMask or Rabby.");
-  }
-
-  const provider = new ethers.BrowserProvider(window.ethereum);
-
-  try {
-    // Request wallet connection
-    await provider.send("eth_requestAccounts", []);
-    const network = await provider.getNetwork();
-
-    // Check and switch to the Base network
-    if (network.chainId !== parseInt(BASE_CHAIN_ID, 16)) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: BASE_CHAIN_ID }],
-        });
-      } catch (switchError) {
-        if (switchError.code === 4902) { // If the network is not defined in the wallet
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [BASE_PARAMS],
-          });
-        } else {
-          throw switchError;
-        }
-      }
-    }
-    
-    // After ensuring connection and correct network
-    const signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    
-    // Update the UI
-    document.getElementById("connectWalletBtn").innerText = `🟢 ${address.slice(0, 6)}...${address.slice(-4)}`;
-    document.getElementById("connectWalletBtn").disabled = true;
-
-    // Store signer and contract instance in the window object for global access
-    window.signer = signer;
-    window.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-  } catch (err) {
-    console.error("Error connecting wallet:", err);
-    alert("Failed to connect wallet. Please try again.");
-  }
-}
-
-// -----------------------------------
-// SECTION 3: CORE 2048 GAME LOGIC
-// -----------------------------------
+// ---------------- GAME CORE ----------------
 
 function initGame() {
   board = Array.from({ length: size }, () => Array(size).fill(0));
@@ -102,31 +26,28 @@ function initGame() {
 }
 
 function addNumber() {
-  let empty = [];
-  board.forEach((row, r) => row.forEach((val, c) => {
-    if (val === 0) empty.push({ r, c });
+  const empty = [];
+  board.forEach((row, r) => row.forEach((v, c) => {
+    if (v === 0) empty.push({ r, c });
   }));
-  if (empty.length > 0) {
-    const { r, c } = empty[Math.floor(Math.random() * empty.length)];
-    board[r][c] = Math.random() < 0.9 ? 2 : 4;
-  }
+  if (empty.length === 0) return;
+  const { r, c } = empty[Math.floor(Math.random() * empty.length)];
+  board[r][c] = Math.random() < 0.9 ? 2 : 4;
 }
 
 function updateBoard() {
-  const gameContainer = document.getElementById("game");
-  gameContainer.innerHTML = "";
-  board.forEach(row => {
-    row.forEach(val => {
-      const tile = document.createElement("div");
-      tile.className = `tile tile-${val}`;
-      tile.dataset.value = val > 0 ? val : "";
-      gameContainer.appendChild(tile);
-    });
-  });
+  const gameEl = document.getElementById("game");
+  gameEl.innerHTML = "";
+  board.forEach(row => row.forEach(val => {
+    const tile = document.createElement("div");
+    tile.className = `tile tile-${val}`;
+    tile.dataset.value = val > 0 ? val : "";
+    gameEl.appendChild(tile);
+  }));
 }
 
 function slideAndCombine(row) {
-  let newRow = row.filter(val => val !== 0);
+  let newRow = row.filter(v => v !== 0);
   for (let i = 0; i < newRow.length - 1; i++) {
     if (newRow[i] === newRow[i + 1]) {
       newRow[i] *= 2;
@@ -134,17 +55,14 @@ function slideAndCombine(row) {
       newRow[i + 1] = 0;
     }
   }
-  newRow = newRow.filter(val => val !== 0);
-  while (newRow.length < size) {
-    newRow.push(0);
-  }
+  newRow = newRow.filter(v => v !== 0);
+  while (newRow.length < size) newRow.push(0);
   return newRow;
 }
 
 function rotateClockwise(mat) {
   return mat[0].map((_, i) => mat.map(row => row[i]).reverse());
 }
-
 function rotateCounterClockwise(mat) {
   return mat[0].map((_, i) => mat.map(row => row[row.length - 1 - i]));
 }
@@ -152,12 +70,12 @@ function rotateCounterClockwise(mat) {
 function checkGameOver() {
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
-      if (board[r][c] === 0) return false; // Empty cell exists
-      if (r < size - 1 && board[r][c] === board[r + 1][c]) return false; // Vertical move possible
-      if (c < size - 1 && board[r][c] === board[r][c + 1]) return false; // Horizontal move possible
+      if (board[r][c] === 0) return false;
+      if (r < size - 1 && board[r][c] === board[r + 1][c]) return false;
+      if (c < size - 1 && board[r][c] === board[r][c + 1]) return false;
     }
   }
-  return true; // No moves left
+  return true;
 }
 
 function showGameOver() {
@@ -165,105 +83,147 @@ function showGameOver() {
   document.getElementById("scoreForm").style.display = "block";
 }
 
-// -----------------------------------
-// SECTION 4: CONTROLLERS & EVENT LISTENERS
-// -----------------------------------
+// ---------------- CONTROLS ----------------
 
-function setupEventListeners() {
-  // Game movement controls
+function move(direction) {
+  const prev = JSON.stringify(board);
+  switch (direction) {
+    case "left":
+      board = board.map(row => slideAndCombine(row));
+      break;
+    case "right":
+      board = board.map(row => slideAndCombine(row.reverse()).reverse());
+      break;
+    case "up":
+      board = rotateCounterClockwise(board);
+      board = board.map(row => slideAndCombine(row));
+      board = rotateClockwise(board);
+      break;
+    case "down":
+      board = rotateClockwise(board);
+      board = board.map(row => slideAndCombine(row));
+      board = rotateCounterClockwise(board);
+      break;
+  }
+  if (JSON.stringify(board) !== prev) {
+    addNumber();
+    updateBoard();
+    if (checkGameOver()) showGameOver();
+  }
+}
+
+function setupKeyboardAndTouch() {
+  // Keyboard
   document.onkeydown = (e) => {
-    const originalBoardString = JSON.stringify(board);
-    let played = true;
-
     switch (e.key) {
-      case "ArrowLeft":
-        board = board.map(row => slideAndCombine(row));
-        break;
-      case "ArrowRight":
-        board = board.map(row => slideAndCombine(row.reverse()).reverse());
-        break;
-      case "ArrowUp":
-        board = rotateCounterClockwise(board);
-        board = board.map(row => slideAndCombine(row));
-        board = rotateClockwise(board);
-        break;
-      case "ArrowDown":
-        board = rotateClockwise(board);
-        board = board.map(row => slideAndCombine(row));
-        board = rotateCounterClockwise(board);
-        break;
-      default:
-        played = false;
-    }
-
-    if (played && JSON.stringify(board) !== originalBoardString) {
-      addNumber();
-      updateBoard();
-      if (checkGameOver()) {
-        showGameOver();
-      }
+      case "ArrowLeft": move("left"); break;
+      case "ArrowRight": move("right"); break;
+      case "ArrowUp": move("up"); break;
+      case "ArrowDown": move("down"); break;
     }
   };
 
-  // Connect wallet button
-  document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
+  // Touch
+  let startX, startY;
+  document.addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+  }, { passive: true });
 
-  // GM Button
-  document.getElementById("gmButton").addEventListener("click", async () => {
-    if (!window.contract) return alert("⛔️ First, connect your wallet");
-    try {
-      const tx = await window.contract.gm();
-      await tx.wait();
-      alert("🌞 GM sent successfully!");
-    } catch (err) {
-      alert("⛔ GM failed: " + (err.reason || err.message));
-    }
-  });
-
-  // Score Submission Form
-  document.getElementById("scoreForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!window.contract) return alert("⛔️ First, connect your wallet");
-
-    const name = document.getElementById("playerName").value.trim();
-    if (!name || score === 0) return alert("Invalid name or score");
-
-    try {
-      const tx = await window.contract.submitScore(score, name);
-      await tx.wait();
-      alert("✅ Your score was submitted to the blockchain!");
-      // Reset the game after successful submission
-      initGame();
-    } catch (err) {
-      alert("❌ Score submission failed: " + (err.reason || err.message));
-    }
-  });
-
-  // Leaderboard Toggle Button
-  document.getElementById("leaderboardToggle").addEventListener("click", async () => {
-    if (!window.contract) return alert("⛔️ First, connect your wallet");
-    
-    const boardEl = document.getElementById("leaderboard");
-    if (boardEl.style.display === "none") {
-      try {
-        const scores = await window.contract.getTopScores();
-        boardEl.innerHTML = "<h3>🏆 Leaderboard</h3><ul>" + scores.map((s, i) =>
-          `<li>#${i + 1} - ${s.name || "(unknown)"}: ${s.score}</li>`
-        ).join("") + "</ul>";
-        boardEl.style.display = "block";
-      } catch (err) {
-        alert("❌ Failed to fetch leaderboard: " + (err.reason || err.message));
+  document.addEventListener("touchend", (e) => {
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    if (Math.max(absX, absY) > 30) {
+      if (absX > absY) {
+        dx > 0 ? move("right") : move("left");
+      } else {
+        dy > 0 ? move("down") : move("up");
       }
-    } else {
-      boardEl.style.display = "none";
     }
-  });
+  }, { passive: true });
 }
 
-// -----------------------------------
-// SECTION 5: APP INITIALIZATION
-// -----------------------------------
+// ---------------- WALLET ----------------
+
+async function connectWallet() {
+  if (!window.ethereum) return alert("🦊 لطفاً متامسک یا Rabby نصب کن");
+
+  const browserProvider = new ethers.BrowserProvider(window.ethereum);
+  await browserProvider.send("eth_requestAccounts", []);
+  signer = await browserProvider.getSigner();
+  const userAddress = await signer.getAddress();
+
+  document.getElementById("connectWalletBtn").innerText = `🟢 ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+  document.getElementById("connectWalletBtn").disabled = true;
+
+  const network = await browserProvider.getNetwork();
+  if (network.chainId !== parseInt(BASE_CHAIN_ID, 16)) {
+    alert("🛑 لطفاً شبکه Base رو انتخاب کن");
+    return;
+  }
+
+  contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+}
+
+// ---------------- INTERACTIONS ----------------
+
+async function sendGM() {
+  if (!contract) return alert("⛔ اول کیف پولتو وصل کن");
+  try {
+    const tx = await contract.gm();
+    await tx.wait();
+    alert("🌞 GM ثبت شد!");
+  } catch (err) {
+    alert("❌ خطا در GM: " + (err.reason || err.message));
+  }
+}
+
+async function submitScoreHandler(e) {
+  e.preventDefault();
+  const name = document.getElementById("playerName").value.trim();
+  if (!name || score === 0) return alert("نام یا امتیاز نامعتبره");
+  if (!contract) return alert("⛔ اول کیف پولتو وصل کن");
+
+  try {
+    const tx = await contract.submitScore(score, name);
+    await tx.wait();
+    alert("✅ امتیاز ثبت شد!");
+    initGame();
+  } catch (err) {
+    alert("❌ خطا در ثبت امتیاز: " + (err.reason || err.message));
+  }
+}
+
+async function toggleLeaderboard() {
+  if (!contract) return alert("⛔ اول کیف پولتو وصل کن");
+  const board = document.getElementById("leaderboard");
+  if (board.style.display === "none") {
+    try {
+      const scores = await contract.getTopScores();
+      board.innerHTML = "<h3>🏆 Leaderboard</h3><ul>" + scores.map((s, i) =>
+        `<li>#${i + 1} - ${s.name || "(unknown)"}: ${s.score}</li>`
+      ).join("") + "</ul>";
+      board.style.display = "block";
+    } catch (err) {
+      alert("❌ خطا در گرفتن لیدربرد: " + (err.reason || err.message));
+    }
+  } else {
+    board.style.display = "none";
+  }
+}
+
+// ---------------- INIT ----------------
+
 window.onload = () => {
   initGame();
-  setupEventListeners();
+  setupKeyboardAndTouch();
+
+  document.getElementById("connectWalletBtn").onclick = connectWallet;
+  document.getElementById("gmButton").onclick = sendGM;
+  document.getElementById("scoreForm").addEventListener("submit", submitScoreHandler);
+  document.getElementById("leaderboardToggle").onclick = toggleLeaderboard;
 };
