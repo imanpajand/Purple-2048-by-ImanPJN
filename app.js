@@ -10,6 +10,7 @@ let gameOver = false;
 
 window.onload = () => {
   initGame();
+  setupControls();
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
@@ -26,57 +27,49 @@ async function connectWallet() {
     const address = await signer.getAddress();
     document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
   } else {
-    alert("لطفاً کیف پولی مثل MetaMask نصب کنید.");
+    alert("🦊 لطفاً متامسک یا Rabby رو نصب کن.");
   }
 }
 
 async function sendGM() {
-  if (!contract || !signer) {
-    alert("لطفاً اول کیف پول رو وصل کن.");
-    return;
-  }
+  if (!contract) return alert("اول کیف پول رو وصل کن");
+
   try {
     const tx = await contract.gm("Gm to Iman", 0);
     await tx.wait();
     alert("✅ GM ثبت شد!");
     loadLeaderboard();
   } catch (err) {
-    console.error(err);
+    console.error("GM Error:", err);
     alert("❌ ارسال GM با خطا مواجه شد.");
   }
 }
 
 async function submitScore(e) {
   e.preventDefault();
-  if (!contract || !signer) {
-    alert("اول کیف پول رو وصل کن.");
-    return;
-  }
-  const nameInput = document.getElementById("playerName");
-  const name = nameInput.value.trim();
-  if (!name) {
-    alert("اسم رو وارد کن.");
-    return;
-  }
+  if (!contract) return alert("اول کیف پول رو وصل کن");
+
+  const name = document.getElementById("playerName").value.trim();
+  if (!name) return alert("نام بازیکن را وارد کن");
 
   try {
     const tx = await contract.gm(name, currentScore);
     await tx.wait();
-    alert("🎉 امتیاز ثبت شد!");
-    nameInput.value = "";
+    alert("🎯 امتیاز ثبت شد!");
+    document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   } catch (err) {
-    console.error(err);
+    console.error("Submit Error:", err);
     alert("❌ ثبت امتیاز با خطا مواجه شد.");
   }
 }
 
 async function loadLeaderboard() {
-  if (!provider) provider = new ethers.BrowserProvider(window.ethereum || window);
+  if (!provider) return;
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-
   const logs = await readContract.queryFilter("GM");
+
   const leaderboard = {};
   logs.forEach(log => {
     const name = log.args.name;
@@ -107,7 +100,7 @@ function toggleLeaderboard() {
   }
 }
 
-// ---------------- GAME LOGIC ----------------
+// ----------------- GAME LOGIC ------------------
 
 let grid = [];
 
@@ -118,7 +111,6 @@ function initGame() {
   currentScore = 0;
   gameOver = false;
   updateGameBoard();
-  setupControls();
 }
 
 function resetGame() {
@@ -134,12 +126,13 @@ function setupControls() {
     }
   };
 
-  // لمس برای موبایل
+  // لمس موبایل
   let startX, startY;
   document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
   });
+
   document.addEventListener("touchend", (e) => {
     if (gameOver) return;
     const dx = e.changedTouches[0].clientX - startX;
@@ -221,7 +214,7 @@ function move(direction) {
     updateGameBoard();
     if (!canMove()) {
       gameOver = true;
-      alert("💀 Game Over! Submit your score.");
+      alert("💀 Game Over! امتیازت رو ثبت کن.");
     }
   }
 }
