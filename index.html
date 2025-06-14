@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Purple 2048 by ImanPJN</title>
+
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Purple 2048</h1>
+      <button onclick="connectWallet()" id="connectWalletBtn">🔗 Connect Wallet</button>
+      <button id="gmButton">GM ✨</button>
+      <div id="game"></div>
+      <form id="scoreForm">
+        <input type="text" id="playerName" placeholder="Enter your name" maxlength="16" required />
+        <button type="submit">Submit Score</button>
+      </form>
+      <p class="warning">⛔ Don't cheat — your wallet history is public!</p>
+      <button id="leaderboardToggle">Show Leaderboard</button>
+      <div id="leaderboard" style="display: none;"></div>
+    </div>
+
+    <footer class="footer" style="text-align: center; margin-top: 40px; font-size: 0.9rem; color: #5E35B1;">
+      <p style="word-wrap: break-word;">
+        Developed by <strong>ImanPJN</strong> ➤ 
+        <a href="https://github.com/imanpajand/Purple-2048" target="_blank" style="color: #5E35B1; text-decoration: none;">GitHub</a> |
+        <a href="https://x.com/imanpjnir" target="_blank" style="color: #5E35B1; text-decoration: none;">Twitter</a> |
+        <a href="https://t.me/imanpjnir" target="_blank" style="color: #5E35B1; text-decoration: none;">Telegram</a>
+      </p>
+    </footer>
+
+    <audio autoplay loop>
+      <source src="purple-chill.mp3" type="audio/mpeg" />
+    </audio>
+
+    <script src="game.js"></script>
+    <script src="wallet.js"></script>
+    <script src="web3.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.3/dist/ethers.umd.min.js"></script>
+    <script src="contract.js"></script>
+  </body>
+</html>

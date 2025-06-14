@@ -1,0 +1,161 @@
+body {
+  font-family: 'Changa', sans-serif;
+  background: url('bg.jpg') no-repeat center center fixed;
+  background-size: cover;
+  margin: 0;
+  padding: 0;
+  color: #3a2f58;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 500px;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(180, 162, 219, 0.4);
+  text-align: center;
+  position: relative;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #6e5aa0;
+  text-shadow: 1px 1px 2px #fff;
+}
+
+button {
+  background-color: #c9bee5;
+  color: #3a2f58;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  border-radius: 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #dcd4ed;
+  transform: scale(1.05);
+}
+
+input[type="text"] {
+  padding: 10px;
+  width: 80%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #c9bee5;
+  border-radius: 10px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.warning {
+  color: #a02e2e;
+  font-size: 0.9rem;
+  margin: 10px 0;
+}
+
+#game {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.tile {
+  width: 100%;
+  padding-top: 100%;
+  background-color: #eae6f8;
+  border-radius: 10px;
+  position: relative;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #6e5aa0;
+  animation: pop 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  border: 2px solid rgba(255, 200, 150, 0.6);
+}
+
+.tile::after {
+  content: attr(data-value);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* رنگ‌ها بر اساس عدد */
+.tile-0 { background-color: #ffffff; }
+.tile-2 { background-color: #f3effa; }
+.tile-4 { background-color: #e3dcf4; }
+.tile-8 { background-color: #d0c5ed; }
+.tile-16 { background-color: #b8a6dc; }
+.tile-32 { background-color: #a88bd1; }
+.tile-64 { background-color: #9971c4; color: #fff; }
+.tile-128 { background-color: #8856b7; color: #fff; }
+.tile-256 { background-color: #753aa7; color: #fff; }
+.tile-512 { background-color: #662d99; color: #fff; }
+.tile-1024 { background-color: #561f89; color: #fff; }
+.tile-2048 { background-color: #470d7f; color: #fff; }
+
+/* انیمیشن پاپ برای کاشی جدید */
+@keyframes pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* لیدربرد */
+#leaderboard {
+  margin-top: 20px;
+  text-align: left;
+  background: rgba(234, 230, 248, 0.6);
+  padding: 15px;
+  border-radius: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* گیم اور */
+#gameOverBanner {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(102, 45, 153, 0.9);
+  color: #fff;
+  padding: 30px 50px;
+  font-size: 2rem;
+  border-radius: 20px;
+  z-index: 100;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.footer {
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 20px 0;
+  color: #6e5aa0;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-top: 1px solid #dcd4ed;
+  margin-top: 40px;
+}
+
+.footer a {
+  color: #6e5aa0;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
