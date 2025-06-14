@@ -1,252 +1,242 @@
-let board, score = 0;
-const size = 4;
-
-const BASE_CHAIN_ID = "0x2105"; // Base Mainnet (hex)
-const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
-const CONTRACT_ABI = [
-  "event GM(string name, uint256 score, address player, uint256 timestamp)",
-  "function gm(string name, uint256 score) external",
+const CONTRACT_ADDRESS = "0xba176303832da2e8679004c6add75c4f8c4655dc";
+const ABI = [
+  "function submitScore(string memory name, uint256 score) public",
+  "event ScoreSubmitted(address indexed player, string name, uint256 score)"
 ];
 
-const provider = new ethers.providers.JsonRpcProvider("https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1");
-let signer, contract;
+let provider, signer, contract;
+let currentScore = 0;
+let gameOver = false;
 
-// ---------- GAME LOGIC ----------
-
-function initGame() {
-  board = Array.from({ length: size }, () => Array(size).fill(0));
-  score = 0;
-  addNumber();
-  addNumber();
-  updateBoard();
-  document.getElementById("scoreForm").style.display = "none";
-  document.getElementById("leaderboard").style.display = "none";
-}
-
-function addNumber() {
-  const empty = [];
-  board.forEach((row, r) => row.forEach((v, c) => {
-    if (v === 0) empty.push({ r, c });
-  }));
-  if (empty.length === 0) return;
-  const { r, c } = empty[Math.floor(Math.random() * empty.length)];
-  board[r][c] = Math.random() < 0.9 ? 2 : 4;
-}
-
-function updateBoard() {
-  const gameEl = document.getElementById("game");
-  gameEl.innerHTML = "";
-  board.forEach(row => row.forEach(val => {
-    const tile = document.createElement("div");
-    tile.className = `tile tile-${val}`;
-    tile.dataset.value = val > 0 ? val : "";
-    gameEl.appendChild(tile);
-  }));
-}
-
-function slideAndCombine(row) {
-  let newRow = row.filter(v => v !== 0);
-  for (let i = 0; i < newRow.length - 1; i++) {
-    if (newRow[i] === newRow[i + 1]) {
-      newRow[i] *= 2;
-      score += newRow[i];
-      newRow[i + 1] = 0;
-    }
-  }
-  newRow = newRow.filter(v => v !== 0);
-  while (newRow.length < size) newRow.push(0);
-  return newRow;
-}
-
-function rotateClockwise(mat) {
-  return mat[0].map((_, i) => mat.map(row => row[i]).reverse());
-}
-function rotateCounterClockwise(mat) {
-  return mat[0].map((_, i) => mat.map(row => row[row.length - 1 - i]));
-}
-
-function checkGameOver() {
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (board[r][c] === 0) return false;
-      if (r < size - 1 && board[r][c] === board[r + 1][c]) return false;
-      if (c < size - 1 && board[r][c] === board[r][c + 1]) return false;
-    }
-  }
-  return true;
-}
-
-function showGameOver() {
-  alert(`💀 Game Over!\n🏁 Final Score: ${score}`);
-  document.getElementById("scoreForm").style.display = "block";
-}
-
-// ---------- CONTROLS ----------
-
-function move(direction) {
-  const prev = JSON.stringify(board);
-  switch (direction) {
-    case "left": board = board.map(row => slideAndCombine(row)); break;
-    case "right": board = board.map(row => slideAndCombine(row.reverse()).reverse()); break;
-    case "up":
-      board = rotateCounterClockwise(board);
-      board = board.map(row => slideAndCombine(row));
-      board = rotateClockwise(board);
-      break;
-    case "down":
-      board = rotateClockwise(board);
-      board = board.map(row => slideAndCombine(row));
-      board = rotateCounterClockwise(board);
-      break;
-  }
-  if (JSON.stringify(board) !== prev) {
-    addNumber();
-    updateBoard();
-    if (checkGameOver()) showGameOver();
-  }
-}
-
-function setupControls() {
-  document.onkeydown = (e) => {
-    switch (e.key) {
-      case "ArrowLeft": move("left"); break;
-      case "ArrowRight": move("right"); break;
-      case "ArrowUp": move("up"); break;
-      case "ArrowDown": move("down"); break;
-    }
-  };
-
-  let startX, startY;
-  document.addEventListener("touchstart", (e) => {
-    const t = e.touches[0];
-    startX = t.clientX; startY = t.clientY;
-  }, { passive: true });
-
-  document.addEventListener("touchend", (e) => {
-    const t = e.changedTouches[0];
-    const dx = t.clientX - startX, dy = t.clientY - startY;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) > 30) {
-      if (Math.abs(dx) > Math.abs(dy)) dx > 0 ? move("right") : move("left");
-      else dy > 0 ? move("down") : move("up");
-    }
-  }, { passive: true });
-}
-
-// ---------- WALLET ----------
+window.onload = () => {
+  initGame();
+  document.getElementById("scoreForm").addEventListener("submit", submitScore);
+  document.getElementById("gmButton").addEventListener("click", sendGM);
+  document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
+};
 
 async function connectWallet() {
-  if (!window.ethereum) return alert("🦊 Install MetaMask or Rabby");
+  if (window.ethereum) {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = await provider.getSigner();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-  const chainId = BASE_CHAIN_ID;
-
-  try {
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    const currentChain = await window.ethereum.request({ method: "eth_chainId" });
-
-    if (currentChain !== chainId) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId }]
-        });
-      } catch (err) {
-        if (err.code === 4902) {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId,
-              chainName: "Base Mainnet",
-              rpcUrls: [provider.connection.url],
-              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-              blockExplorerUrls: ["https://basescan.org"]
-            }]
-          });
-        } else throw err;
-      }
-    }
-
-    const browserProvider = new ethers.providers.Web3Provider(window.ethereum);
-    signer = browserProvider.getSigner();
-    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText = `🟢 ${address.slice(0, 6)}...${address.slice(-4)}`;
-    document.getElementById("connectWalletBtn").disabled = true;
-
-  } catch (err) {
-    alert("❌ Wallet error: " + (err.message || err));
+    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+  } else {
+    alert("Please install MetaMask or a Web3 wallet");
   }
 }
-
-// ---------- INTERACTIONS ----------
 
 async function sendGM() {
-  if (!signer || !contract) return alert("⛔ Connect wallet first");
-  const network = await signer.provider.getNetwork();
-  if (network.chainId !== 8453) return alert("⚠️ You must be on Base Mainnet");
-
+  if (!contract || !signer) {
+    alert("Please connect wallet first");
+    return;
+  }
   try {
-    const tx = await contract.gm("GM to Iman", 0);
+    const address = await signer.getAddress();
+    const name = `Gm to ${address.slice(0, 6)}`;
+    const tx = await contract.submitScore(name, 0);
     await tx.wait();
-    alert("🌞 GM sent!");
+    alert("🌞 GM sent to chain!");
+    loadLeaderboard(); // Refresh leaderboard after GM
   } catch (err) {
-    alert("❌ GM failed: " + (err.reason || err.message));
+    console.error(err);
+    alert("❌ GM transaction failed.");
   }
 }
 
-async function submitScoreHandler(e) {
+async function submitScore(e) {
   e.preventDefault();
-  const name = document.getElementById("playerName").value.trim();
-  if (!name || score === 0) return alert("❗ Invalid name or score");
-  if (!contract) return alert("⛔ Connect wallet first");
+  if (!contract || !signer) {
+    alert("Connect wallet first.");
+    return;
+  }
+  const nameInput = document.getElementById("playerName");
+  const name = nameInput.value.trim();
+  if (!name) {
+    alert("Please enter your name.");
+    return;
+  }
 
   try {
-    const tx = await contract.gm(name, score);
+    const tx = await contract.submitScore(name, currentScore);
     await tx.wait();
-    alert("✅ Score submitted!");
-    initGame(); // Reset game after transaction
+    alert("🎉 Score submitted!");
+
+    nameInput.value = "";
+    loadLeaderboard();
+    resetGame(); // بدون رفرش صفحه
   } catch (err) {
-    alert("❌ Submit failed: " + (err.reason || err.message));
+    console.error(err);
+    alert("❌ Score submission failed.");
   }
 }
 
 async function loadLeaderboard() {
-  const board = document.getElementById("leaderboard");
-  board.innerHTML = "<h3>🏆 Leaderboard</h3><p>Loading...</p>";
-  board.style.display = "block";
+  if (!provider) provider = new ethers.BrowserProvider(window.ethereum || window);
 
-  try {
-    const filter = contract.filters.GM();
-    const logs = await provider.getLogs({
-      fromBlock: 0,
-      toBlock: "latest",
-      address: CONTRACT_ADDRESS,
-      topics: filter.topics
-    });
+  const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+  const logs = await readContract.queryFilter("ScoreSubmitted");
 
-    const iface = new ethers.utils.Interface(CONTRACT_ABI);
-    const parsed = logs.map(log => iface.parseLog(log).args);
-    const scores = parsed.map(args => ({
-      name: args.name,
-      score: args.score.toNumber(),
-      player: args.player
-    })).sort((a, b) => b.score - a.score).slice(0, 10);
+  const leaderboard = {};
+  logs.forEach(log => {
+    const player = log.args.name;
+    const score = parseInt(log.args.score);
+    if (!leaderboard[player] || score > leaderboard[player]) {
+      leaderboard[player] = score;
+    }
+  });
 
-    board.innerHTML = "<h3>🏆 Leaderboard</h3><ul>" + scores.map((s, i) =>
-      `<li>#${i + 1} - ${s.name || "(anon)"}: ${s.score}</li>`
-    ).join("") + "</ul>";
+  const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
+  const lbDiv = document.getElementById("leaderboard");
+  lbDiv.innerHTML = "<h3>🏆 Leaderboard</h3>";
+  sorted.slice(0, 10).forEach(([name, score], index) => {
+    lbDiv.innerHTML += `<p>${index + 1}. <strong>${name}</strong>: ${score}</p>`;
+  });
+}
 
-  } catch (err) {
-    board.innerHTML = "<p>❌ Failed to load leaderboard</p>";
+function toggleLeaderboard() {
+  const lb = document.getElementById("leaderboard");
+  if (lb.style.display === "none") {
+    loadLeaderboard();
+    lb.style.display = "block";
+    document.getElementById("leaderboardToggle").innerText = "Hide Leaderboard";
+  } else {
+    lb.style.display = "none";
+    document.getElementById("leaderboardToggle").innerText = "Show Leaderboard";
   }
 }
 
-// ---------- INIT ----------
+// ---------------------- GAME LOGIC ----------------------
 
-window.onload = () => {
-  initGame();
+let grid = [];
+
+function initGame() {
+  grid = Array(4).fill().map(() => Array(4).fill(0));
+  addRandomTile();
+  addRandomTile();
+  currentScore = 0;
+  gameOver = false;
+  updateGameBoard();
   setupControls();
-  document.getElementById("connectWalletBtn").onclick = connectWallet;
-  document.getElementById("gmButton").onclick = sendGM;
-  document.getElementById("scoreForm").addEventListener("submit", submitScoreHandler);
-  document.getElementById("leaderboardToggle").onclick = loadLeaderboard;
-};
+}
+
+function resetGame() {
+  initGame();
+}
+
+function setupControls() {
+  window.onkeydown = (e) => {
+    if (gameOver) return;
+    const key = e.key;
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)) {
+      move(key);
+    }
+  };
+
+  // پشتیبانی از موبایل (سوایپ)
+  let touchStartX, touchStartY;
+  document.addEventListener("touchstart", (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+  document.addEventListener("touchend", (e) => {
+    if (gameOver) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      move(dx > 0 ? "ArrowRight" : "ArrowLeft");
+    } else {
+      move(dy > 0 ? "ArrowDown" : "ArrowUp");
+    }
+  });
+}
+
+function addRandomTile() {
+  const empty = [];
+  grid.forEach((row, r) =>
+    row.forEach((val, c) => {
+      if (val === 0) empty.push([r, c]);
+    })
+  );
+  if (empty.length === 0) return;
+  const [r, c] = empty[Math.floor(Math.random() * empty.length)];
+  grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+}
+
+function updateGameBoard() {
+  const gameDiv = document.getElementById("game");
+  gameDiv.innerHTML = "";
+
+  grid.forEach((row, r) =>
+    row.forEach((val, c) => {
+      const tile = document.createElement("div");
+      tile.className = `tile tile-${val}`;
+      tile.setAttribute("data-value", val > 0 ? val : "");
+      gameDiv.appendChild(tile);
+    })
+  );
+}
+
+function move(direction) {
+  let moved = false;
+  const original = JSON.parse(JSON.stringify(grid));
+
+  const combine = (row) => {
+    let arr = row.filter(v => v);
+    for (let i = 0; i < arr.length - 1; i++) {
+      if (arr[i] === arr[i + 1]) {
+        arr[i] *= 2;
+        currentScore += arr[i];
+        arr[i + 1] = 0;
+      }
+    }
+    return arr.filter(v => v).concat(Array(4 - arr.filter(v => v).length).fill(0));
+  };
+
+  for (let i = 0; i < 4; i++) {
+    let row;
+    switch (direction) {
+      case "ArrowLeft":
+        row = grid[i];
+        grid[i] = combine(row);
+        break;
+      case "ArrowRight":
+        row = grid[i].slice().reverse();
+        grid[i] = combine(row).reverse();
+        break;
+      case "ArrowUp":
+        row = grid.map(r => r[i]);
+        let combinedUp = combine(row);
+        grid.forEach((r, j) => (r[i] = combinedUp[j]));
+        break;
+      case "ArrowDown":
+        row = grid.map(r => r[i]).reverse();
+        let combinedDown = combine(row).reverse();
+        grid.forEach((r, j) => (r[i] = combinedDown[j]));
+        break;
+    }
+  }
+
+  if (JSON.stringify(grid) !== JSON.stringify(original)) {
+    addRandomTile();
+    updateGameBoard();
+    if (!canMove()) {
+      gameOver = true;
+      alert("💀 Game Over! Submit your score.");
+    }
+  }
+}
+
+function canMove() {
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      if (grid[r][c] === 0) return true;
+      if (c < 3 && grid[r][c] === grid[r][c + 1]) return true;
+      if (r < 3 && grid[r][c] === grid[r + 1][c]) return true;
+    }
+  }
+  return false;
+}
