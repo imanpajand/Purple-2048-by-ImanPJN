@@ -1,7 +1,7 @@
 /*
  * =========================================
  * Purple 2048 - Stylesheet
- * Version for CSS-only animation test
+ * New Dynamic & Responsive Version
  * =========================================
  */
 
@@ -11,15 +11,16 @@ body {
   background-size: cover;
   font-family: 'Changa', sans-serif;
   margin: 0;
-  padding: 0;
+  padding: 20px 10px; /* Added padding for mobile screen edges */
   color: #3a2f58;
   overflow-x: hidden;
+  box-sizing: border-box; /* Ensures padding doesn't add to width */
 }
 
 /* Main container for the game interface */
 .container {
   max-width: 500px;
-  margin: 30px auto;
+  margin: 0 auto; /* Removed top/bottom margin for more compact view */
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.85);
   border-radius: 20px;
@@ -28,28 +29,40 @@ body {
   position: relative;
 }
 
+/* Reduced spacing for the main title */
 h1 {
-  font-size: 2.5rem;
-  margin-bottom: 20px;
+  font-size: 2.2rem; /* Slightly smaller for mobile */
+  margin-top: 5px;   /* Reduced top margin */
+  margin-bottom: 15px; /* Reduced bottom margin */
   color: #6e5aa0;
   text-shadow: 1px 1px 2px #fff;
 }
 
+/* New vibrant blue color for main action buttons */
 button {
-  background-color: #c9bee5;
-  color: #3a2f58;
+  background-color: #3A7DFF; /* New vibrant fantasy blue */
+  color: #ffffff; /* White text for better contrast */
   border: none;
-  padding: 10px 20px;
+  padding: 12px 20px;
   margin: 5px;
   border-radius: 12px;
   font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 button:hover {
-  background-color: #dcd4ed;
+  background-color: #5C95FF; /* Lighter blue on hover */
   transform: scale(1.05);
+}
+
+/* Specific styling for the score submission button */
+#scoreForm button {
+    background-color: #E06377; /* A contrasting pink/red */
+}
+#scoreForm button:hover {
+    background-color: #F28394;
 }
 
 input[type="text"] {
@@ -63,10 +76,11 @@ input[type="text"] {
   text-align: center;
 }
 
+/* Resized and repositioned warning text */
 .warning {
   color: #a02e2e;
-  font-size: 0.9rem;
-  margin: 10px 0;
+  font-size: 0.75rem; /* Made font size smaller */
+  margin: 15px 0 5px 0;   /* Adjusted margin */
 }
 
 /* Game board grid */
@@ -77,24 +91,17 @@ input[type="text"] {
   margin: 20px 0;
 }
 
-/* * Individual tile styling
- * This version includes an improved general animation for all tiles.
- */
+/* Individual tile styling */
 .tile {
   width: 100%;
   padding-top: 100%; /* Maintain square aspect ratio */
-  background-color: #eae6f8;
   border-radius: 10px;
   position: relative;
   font-size: 1.5rem;
   font-weight: bold;
-  color: #6e5aa0;
-  border: 2px solid rgba(255, 200, 150, 0.6);
+  color: #fff; /* White text for all tiles for better contrast */
   
-  /* Smooths out changes to size, color, and position */
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  
-  /* The improved pop animation is applied to every tile on creation */
   animation: tile-creation-pop 0.3s ease;
 }
 
@@ -107,42 +114,38 @@ input[type="text"] {
   transform: translate(-50%, -50%);
 }
 
-/* Colors for different tile values */
-.tile-0 { background-color: #ffffff; }
-.tile-2 { background-color: #f3effa; }
-.tile-4 { background-color: #e3dcf4; }
-.tile-8 { background-color: #d0c5ed; }
-.tile-16 { background-color: #b8a6dc; }
-.tile-32 { background-color: #a88bd1; }
-.tile-64 { background-color: #9971c4; color: #fff; }
-.tile-128 { background-color: #8856b7; color: #fff; }
-.tile-256 { background-color: #753aa7; color: #fff; }
-.tile-512 { background-color: #662d99; color: #fff; }
-.tile-1024 { background-color: #561f89; color: #fff; }
-.tile-2048 { background-color: #470d7f; color: #fff; }
-
 /*
- * Improved pop animation with a slight bounce effect
- * This will run for EVERY tile that is drawn on the board after a move.
+ * =========================================
+ * NEW DYNAMIC TILE COLOR PALETTE
+ * Blue -> Purple -> Pink progression
+ * =========================================
  */
+.tile-0 { background-color: #cdc1e4; }
+.tile-2 { background-color: #a9d6e5; color: #333; }
+.tile-4 { background-color: #89c2d9; color: #333; }
+.tile-8 { background-color: #61a5c2; }
+.tile-16 { background-color: #468faf; }
+.tile-32 { background-color: #2c7da0; }
+.tile-64 { background-color: #2a6f97; }
+.tile-128 { background-color: #5854a6; } /* Transition to Purple */
+.tile-256 { background-color: #8d62aa; }
+.tile-512 { background-color: #c77dff; } /* Vibrant Pink/Purple */
+.tile-1024 { background-color: #e06377; }
+.tile-2048 { background-color: #f25278; }
+.tile-4096 { background-color: #ff0054; }
+.tile-8192 { background-color: #ff0000; }
+
+
+/* Animation for new tiles */
 @keyframes tile-creation-pop {
-  0% {
-    transform: scale(0.7);
-    opacity: 0;
-  }
-  80% {
-    transform: scale(1.05); /* Slight bounce effect */
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0% { transform: scale(0.7); opacity: 0; }
+  80% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 /* Leaderboard styling */
 #leaderboard {
-  margin-top: 20px;
+  margin-top: 15px;
   text-align: left;
   background: rgba(234, 230, 248, 0.6);
   padding: 15px;
@@ -151,14 +154,14 @@ input[type="text"] {
   overflow-y: auto;
 }
 
+/* Compact footer styling */
 .footer {
   text-align: center;
-  font-size: 0.9rem;
-  padding: 20px 0;
+  font-size: 0.8rem; /* Slightly smaller font */
+  padding: 10px 0 0 0;  /* Reduced padding */
+  margin-top: 20px; /* Reduced margin */
   color: #6e5aa0;
-  background-color: rgba(255, 255, 255, 0.8);
   border-top: 1px solid #dcd4ed;
-  margin-top: 40px;
 }
 
 .footer a {
