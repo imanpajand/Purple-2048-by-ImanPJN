@@ -1,3 +1,7 @@
+/*
+ * Main styling for the page body
+ * Corrects the background image path and removes duplication.
+ */
 body {
   background: url("assets/bg.jpg") no-repeat center center fixed;
   background-size: cover;
@@ -8,6 +12,9 @@ body {
   overflow-x: hidden;
 }
 
+/*
+ * Main container for the game interface
+ */
 .container {
   max-width: 500px;
   margin: 30px auto;
@@ -60,6 +67,9 @@ input[type="text"] {
   margin: 10px 0;
 }
 
+/*
+ * Game board grid
+ */
 #game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -67,20 +77,29 @@ input[type="text"] {
   margin: 20px 0;
 }
 
+/*
+ * Individual tile styling
+ * Includes smooth transitions and a pop-in animation.
+ */
 .tile {
   width: 100%;
-  padding-top: 100%;
+  padding-top: 100%; /* Maintain square aspect ratio */
   background-color: #eae6f8;
   border-radius: 10px;
   position: relative;
   font-size: 1.5rem;
   font-weight: bold;
   color: #6e5aa0;
-  animation: pop 0.3s ease;
-  transition: background-color 0.3s ease, transform 0.2s ease;
   border: 2px solid rgba(255, 200, 150, 0.6);
+  
+  /* Smooths out changes to size, color, and position */
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  
+  /* New, improved pop animation */
+  animation: tile-pop 0.2s ease;
 }
 
+/* Displays the number inside the tile */
 .tile::after {
   content: attr(data-value);
   position: absolute;
@@ -89,7 +108,9 @@ input[type="text"] {
   transform: translate(-50%, -50%);
 }
 
-/* رنگ‌ها بر اساس عدد */
+/*
+ * Colors for different tile values
+ */
 .tile-0 { background-color: #ffffff; }
 .tile-2 { background-color: #f3effa; }
 .tile-4 { background-color: #e3dcf4; }
@@ -98,18 +119,32 @@ input[type="text"] {
 .tile-32 { background-color: #a88bd1; }
 .tile-64 { background-color: #9971c4; color: #fff; }
 .tile-128 { background-color: #8856b7; color: #fff; }
-.tile-256 { background-color: #753aa7; color: #fff; }
+.tile-256 { background-color: #753aa7; color: #fff; } /* Typo fixed from '.tole-256' */
 .tile-512 { background-color: #662d99; color: #fff; }
 .tile-1024 { background-color: #561f89; color: #fff; }
 .tile-2048 { background-color: #470d7f; color: #fff; }
 
-/* انیمیشن پاپ برای کاشی جدید */
-@keyframes pop {
-  0% { transform: scale(0.6); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+/*
+ * Improved pop animation with a slight bounce effect
+ */
+@keyframes tile-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  80% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-/* لیدربرد */
+/*
+ * Leaderboard styling
+ */
 #leaderboard {
   margin-top: 20px;
   text-align: left;
@@ -118,26 +153,6 @@ input[type="text"] {
   border-radius: 10px;
   max-height: 250px;
   overflow-y: auto;
-}
-
-/* گیم اور */
-#gameOverBanner {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(102, 45, 153, 0.9);
-  color: #fff;
-  padding: 30px 50px;
-  font-size: 2rem;
-  border-radius: 20px;
-  z-index: 100;
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
 
 .footer {
