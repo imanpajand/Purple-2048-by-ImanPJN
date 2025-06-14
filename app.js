@@ -1,7 +1,7 @@
 const CONTRACT_ADDRESS = "0xba176303832da2e8679004c6add75c4f8c4655dc";
 const ABI = [
-  "function submitScore(string memory name, uint256 score) public",
-  "event ScoreSubmitted(address indexed player, string name, uint256 score)"
+  "function gm(string name, uint256 score) external",
+  "event GM(string name, uint256 score, address player, uint256 timestamp)"
 ];
 
 let provider, signer, contract;
@@ -13,6 +13,7 @@ window.onload = () => {
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
+  connectWallet();
 };
 
 async function connectWallet() {
@@ -25,96 +26,93 @@ async function connectWallet() {
     const address = await signer.getAddress();
     document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
   } else {
-    alert("Please install MetaMask or a Web3 wallet");
+    alert("لطفاً کیف پولی مثل MetaMask نصب کنید.");
   }
 }
 
 async function sendGM() {
   if (!contract || !signer) {
-    alert("Please connect wallet first");
+    alert("لطفاً اول کیف پول رو وصل کن.");
     return;
   }
   try {
-    const address = await signer.getAddress();
-    const name = `Gm to ${address.slice(0, 6)}`;
-    const tx = await contract.submitScore(name, 0);
+    const tx = await contract.gm("Gm to Iman", 0);
     await tx.wait();
-    alert("🌞 GM sent to chain!");
-    loadLeaderboard(); // Refresh leaderboard after GM
+    alert("✅ GM ثبت شد!");
+    loadLeaderboard();
   } catch (err) {
     console.error(err);
-    alert("❌ GM transaction failed.");
+    alert("❌ ارسال GM با خطا مواجه شد.");
   }
 }
 
 async function submitScore(e) {
   e.preventDefault();
   if (!contract || !signer) {
-    alert("Connect wallet first.");
+    alert("اول کیف پول رو وصل کن.");
     return;
   }
   const nameInput = document.getElementById("playerName");
   const name = nameInput.value.trim();
   if (!name) {
-    alert("Please enter your name.");
+    alert("اسم رو وارد کن.");
     return;
   }
 
   try {
-    const tx = await contract.submitScore(name, currentScore);
+    const tx = await contract.gm(name, currentScore);
     await tx.wait();
-    alert("🎉 Score submitted!");
-
+    alert("🎉 امتیاز ثبت شد!");
     nameInput.value = "";
     loadLeaderboard();
-    resetGame(); // بدون رفرش صفحه
+    resetGame();
   } catch (err) {
     console.error(err);
-    alert("❌ Score submission failed.");
+    alert("❌ ثبت امتیاز با خطا مواجه شد.");
   }
 }
 
 async function loadLeaderboard() {
   if (!provider) provider = new ethers.BrowserProvider(window.ethereum || window);
-
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-  const logs = await readContract.queryFilter("ScoreSubmitted");
 
+  const logs = await readContract.queryFilter("GM");
   const leaderboard = {};
   logs.forEach(log => {
-    const player = log.args.name;
-    const score = parseInt(log.args.score);
-    if (!leaderboard[player] || score > leaderboard[player]) {
-      leaderboard[player] = score;
+    const name = log.args.name;
+    const score = Number(log.args.score);
+    if (!leaderboard[name] || score > leaderboard[name]) {
+      leaderboard[name] = score;
     }
   });
 
   const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
   const lbDiv = document.getElementById("leaderboard");
   lbDiv.innerHTML = "<h3>🏆 Leaderboard</h3>";
-  sorted.slice(0, 10).forEach(([name, score], index) => {
-    lbDiv.innerHTML += `<p>${index + 1}. <strong>${name}</strong>: ${score}</p>`;
+  sorted.slice(0, 10).forEach(([name, score], i) => {
+    lbDiv.innerHTML += `<p>${i + 1}. <strong>${name}</strong>: ${score}</p>`;
   });
 }
 
 function toggleLeaderboard() {
   const lb = document.getElementById("leaderboard");
+  const btn = document.getElementById("leaderboardToggle");
   if (lb.style.display === "none") {
     loadLeaderboard();
     lb.style.display = "block";
-    document.getElementById("leaderboardToggle").innerText = "Hide Leaderboard";
+    btn.innerText = "Hide Leaderboard";
   } else {
     lb.style.display = "none";
-    document.getElementById("leaderboardToggle").innerText = "Show Leaderboard";
+    btn.innerText = "Show Leaderboard";
   }
 }
 
-// ---------------------- GAME LOGIC ----------------------
+// ---------------- GAME LOGIC ----------------
 
 let grid = [];
 
 function initGame() {
-  grid = Array(4).fill().map(() => Array(4).fill(0));
+  grid = Array.from({ length: 4 }, () => Array(4).fill(0));
   addRandomTile();
   addRandomTile();
   currentScore = 0;
@@ -130,22 +128,23 @@ function resetGame() {
 function setupControls() {
   window.onkeydown = (e) => {
     if (gameOver) return;
-    const key = e.key;
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)) {
-      move(key);
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+      e.preventDefault(); // جلوگیری از اسکرول
+      move(e.key);
     }
   };
 
-  // پشتیبانی از موبایل (سوایپ)
-  let touchStartX, touchStartY;
+  // لمس برای موبایل
+  let startX, startY;
   document.addEventListener("touchstart", (e) => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
   });
   document.addEventListener("touchend", (e) => {
     if (gameOver) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = e.changedTouches[0].clientY - touchStartY;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+
     if (Math.abs(dx) > Math.abs(dy)) {
       move(dx > 0 ? "ArrowRight" : "ArrowLeft");
     } else {
@@ -170,8 +169,8 @@ function updateGameBoard() {
   const gameDiv = document.getElementById("game");
   gameDiv.innerHTML = "";
 
-  grid.forEach((row, r) =>
-    row.forEach((val, c) => {
+  grid.forEach((row) =>
+    row.forEach((val) => {
       const tile = document.createElement("div");
       tile.className = `tile tile-${val}`;
       tile.setAttribute("data-value", val > 0 ? val : "");
@@ -181,11 +180,9 @@ function updateGameBoard() {
 }
 
 function move(direction) {
-  let moved = false;
-  const original = JSON.parse(JSON.stringify(grid));
-
+  const clone = JSON.parse(JSON.stringify(grid));
   const combine = (row) => {
-    let arr = row.filter(v => v);
+    let arr = row.filter(Boolean);
     for (let i = 0; i < arr.length - 1; i++) {
       if (arr[i] === arr[i + 1]) {
         arr[i] *= 2;
@@ -193,15 +190,14 @@ function move(direction) {
         arr[i + 1] = 0;
       }
     }
-    return arr.filter(v => v).concat(Array(4 - arr.filter(v => v).length).fill(0));
+    return arr.filter(Boolean).concat(Array(4 - arr.filter(Boolean).length).fill(0));
   };
 
   for (let i = 0; i < 4; i++) {
     let row;
     switch (direction) {
       case "ArrowLeft":
-        row = grid[i];
-        grid[i] = combine(row);
+        grid[i] = combine(grid[i]);
         break;
       case "ArrowRight":
         row = grid[i].slice().reverse();
@@ -209,18 +205,18 @@ function move(direction) {
         break;
       case "ArrowUp":
         row = grid.map(r => r[i]);
-        let combinedUp = combine(row);
-        grid.forEach((r, j) => (r[i] = combinedUp[j]));
+        const colUp = combine(row);
+        grid.forEach((r, j) => (r[i] = colUp[j]));
         break;
       case "ArrowDown":
         row = grid.map(r => r[i]).reverse();
-        let combinedDown = combine(row).reverse();
-        grid.forEach((r, j) => (r[i] = combinedDown[j]));
+        const colDown = combine(row).reverse();
+        grid.forEach((r, j) => (r[i] = colDown[j]));
         break;
     }
   }
 
-  if (JSON.stringify(grid) !== JSON.stringify(original)) {
+  if (JSON.stringify(grid) !== JSON.stringify(clone)) {
     addRandomTile();
     updateGameBoard();
     if (!canMove()) {
