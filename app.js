@@ -1,45 +1,56 @@
-// ===================================
-//  ۱. متغیرهای اصلی و تنظیمات قرارداد
-// ===================================
+/*
+ * =========================================
+ * Purple 2048 - Main Application Logic
+ * Consolidated and Final Version
+ * =========================================
+ */
+
+// -----------------------------------
+// SECTION 1: CORE VARIABLES & CONFIG
+// -----------------------------------
 let board, score = 0;
 const size = 4;
 const BASE_CHAIN_ID = "0x2105"; // Hex for 8453 (Base Mainnet)
+
+// Your provided contract address
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
+
 const CONTRACT_ABI = [
   "function gm() public",
   "function submitScore(uint256 score, string memory playerName) public",
   "function getTopScores() public view returns (tuple(address player, uint256 score, string name)[])"
 ];
 
-// متغیرهای سراسری برای والت
+// Global variables for wallet connection
 window.signer = null;
 window.contract = null;
 
-// ========================================
-//  ۲. منطق مربوط به والت و بلاکچین
-// ========================================
+// -----------------------------------
+// SECTION 2: WALLET & BLOCKCHAIN LOGIC
+// -----------------------------------
 
+// Network parameters using your dedicated Alchemy RPC
 const BASE_PARAMS = {
   chainId: BASE_CHAIN_ID,
   chainName: "Base Mainnet",
   nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-  rpcUrls: ["https://mainnet.base.org"],
+  rpcUrls: ["https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1"], // Your dedicated RPC URL
   blockExplorerUrls: ["https://basescan.org"],
 };
 
 async function connectWallet() {
   if (typeof window.ethereum === "undefined") {
-    return alert("لطفاً کیف‌پول Web3 مثل MetaMask یا Rabby نصب کنید.");
+    return alert("Please install a Web3 wallet like MetaMask or Rabby.");
   }
 
   const provider = new ethers.BrowserProvider(window.ethereum);
 
   try {
-    // درخواست اتصال به والت
+    // Request wallet connection
     await provider.send("eth_requestAccounts", []);
     const network = await provider.getNetwork();
 
-    // بررسی و سوئیچ به شبکه Base
+    // Check and switch to the Base network
     if (network.chainId !== parseInt(BASE_CHAIN_ID, 16)) {
       try {
         await window.ethereum.request({
@@ -47,7 +58,7 @@ async function connectWallet() {
           params: [{ chainId: BASE_CHAIN_ID }],
         });
       } catch (switchError) {
-        if (switchError.code === 4902) { // اگر شبکه در والت تعریف نشده بود
+        if (switchError.code === 4902) { // If the network is not defined in the wallet
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
             params: [BASE_PARAMS],
@@ -58,27 +69,27 @@ async function connectWallet() {
       }
     }
     
-    // بعد از اطمینان از اتصال و شبکه صحیح
+    // After ensuring connection and correct network
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
     
-    // به‌روزرسانی UI
+    // Update the UI
     document.getElementById("connectWalletBtn").innerText = `🟢 ${address.slice(0, 6)}...${address.slice(-4)}`;
     document.getElementById("connectWalletBtn").disabled = true;
 
-    // ذخیره signer و contract در آبجکت window برای دسترسی سراسری
+    // Store signer and contract instance in the window object for global access
     window.signer = signer;
     window.contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
   } catch (err) {
-    console.error("خطا در اتصال والت:", err);
-    alert("اتصال به والت با مشکل مواجه شد. لطفاً دوباره تلاش کنید.");
+    console.error("Error connecting wallet:", err);
+    alert("Failed to connect wallet. Please try again.");
   }
 }
 
-// ========================================
-//  ۳. منطق اصلی بازی 2048
-// ========================================
+// -----------------------------------
+// SECTION 3: CORE 2048 GAME LOGIC
+// -----------------------------------
 
 function initGame() {
   board = Array.from({ length: size }, () => Array(size).fill(0));
@@ -141,27 +152,27 @@ function rotateCounterClockwise(mat) {
 function checkGameOver() {
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
-      if (board[r][c] === 0) return false; // هنوز جای خالی هست
-      if (r < size - 1 && board[r][c] === board[r + 1][c]) return false; // حرکت عمودی ممکن است
-      if (c < size - 1 && board[r][c] === board[r][c + 1]) return false; // حرکت افقی ممکن است
+      if (board[r][c] === 0) return false; // Empty cell exists
+      if (r < size - 1 && board[r][c] === board[r + 1][c]) return false; // Vertical move possible
+      if (c < size - 1 && board[r][c] === board[r][c + 1]) return false; // Horizontal move possible
     }
   }
-  return true; // هیچ حرکتی ممکن نیست
+  return true; // No moves left
 }
 
 function showGameOver() {
-  alert(`💀 Game Over!\n🏁 امتیاز نهایی: ${score}`);
+  alert(`💀 Game Over!\n🏁 Final Score: ${score}`);
   document.getElementById("scoreForm").style.display = "block";
 }
 
-// ========================================
-//  ۴. کنترلرها و مدیریت رویدادها (Events)
-// ========================================
+// -----------------------------------
+// SECTION 4: CONTROLLERS & EVENT LISTENERS
+// -----------------------------------
 
 function setupEventListeners() {
-  // حرکت‌های بازی
+  // Game movement controls
   document.onkeydown = (e) => {
-    let oldBoard = JSON.stringify(board);
+    const originalBoardString = JSON.stringify(board);
     let played = true;
 
     switch (e.key) {
@@ -185,7 +196,7 @@ function setupEventListeners() {
         played = false;
     }
 
-    if (played && JSON.stringify(board) !== oldBoard) {
+    if (played && JSON.stringify(board) !== originalBoardString) {
       addNumber();
       updateBoard();
       if (checkGameOver()) {
@@ -194,40 +205,43 @@ function setupEventListeners() {
     }
   };
 
-  // دکمه GM
+  // Connect wallet button
+  document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
+
+  // GM Button
   document.getElementById("gmButton").addEventListener("click", async () => {
-    if (!window.contract) return alert("⛔️ اول ولت رو وصل کن");
+    if (!window.contract) return alert("⛔️ First, connect your wallet");
     try {
       const tx = await window.contract.gm();
       await tx.wait();
-      alert("🌞 GM با موفقیت ثبت شد!");
+      alert("🌞 GM sent successfully!");
     } catch (err) {
-      alert("⛔ ارسال GM ناموفق بود: " + (err.reason || err.message));
+      alert("⛔ GM failed: " + (err.reason || err.message));
     }
   });
 
-  // ثبت امتیاز
+  // Score Submission Form
   document.getElementById("scoreForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!window.contract) return alert("⛔️ اول ولت رو وصل کن");
+    if (!window.contract) return alert("⛔️ First, connect your wallet");
 
     const name = document.getElementById("playerName").value.trim();
-    if (!name || score === 0) return alert("اسم یا امتیاز معتبر نیست");
+    if (!name || score === 0) return alert("Invalid name or score");
 
     try {
       const tx = await window.contract.submitScore(score, name);
       await tx.wait();
-      alert("✅ امتیاز شما با موفقیت در بلاکچین ثبت شد!");
-      // شروع مجدد بازی بعد از ثبت امتیاز
+      alert("✅ Your score was submitted to the blockchain!");
+      // Reset the game after successful submission
       initGame();
     } catch (err) {
-      alert("❌ ثبت امتیاز ناموفق بود: " + (err.reason || err.message));
+      alert("❌ Score submission failed: " + (err.reason || err.message));
     }
   });
 
-  // نمایش لیدربرد
+  // Leaderboard Toggle Button
   document.getElementById("leaderboardToggle").addEventListener("click", async () => {
-    if (!window.contract) return alert("⛔️ اول ولت رو وصل کن");
+    if (!window.contract) return alert("⛔️ First, connect your wallet");
     
     const boardEl = document.getElementById("leaderboard");
     if (boardEl.style.display === "none") {
@@ -238,7 +252,7 @@ function setupEventListeners() {
         ).join("") + "</ul>";
         boardEl.style.display = "block";
       } catch (err) {
-        alert("❌ خطا در دریافت لیدربرد: " + (err.reason || err.message));
+        alert("❌ Failed to fetch leaderboard: " + (err.reason || err.message));
       }
     } else {
       boardEl.style.display = "none";
@@ -246,9 +260,9 @@ function setupEventListeners() {
   });
 }
 
-// ========================================
-//  ۵. نقطه شروع برنامه
-// ========================================
+// -----------------------------------
+// SECTION 5: APP INITIALIZATION
+// -----------------------------------
 window.onload = () => {
   initGame();
   setupEventListeners();
