@@ -1,7 +1,11 @@
 /*
- * Main styling for the page body
- * Corrects the background image path and removes duplication.
+ * =========================================
+ * Purple 2048 - Stylesheet
+ * Version for CSS-only animation test
+ * =========================================
  */
+
+/* Main styling for the page body */
 body {
   background: url("assets/bg.jpg") no-repeat center center fixed;
   background-size: cover;
@@ -12,9 +16,7 @@ body {
   overflow-x: hidden;
 }
 
-/*
- * Main container for the game interface
- */
+/* Main container for the game interface */
 .container {
   max-width: 500px;
   margin: 30px auto;
@@ -67,9 +69,7 @@ input[type="text"] {
   margin: 10px 0;
 }
 
-/*
- * Game board grid
- */
+/* Game board grid */
 #game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -77,9 +77,8 @@ input[type="text"] {
   margin: 20px 0;
 }
 
-/*
- * Individual tile styling
- * Includes smooth transitions and a pop-in animation.
+/* * Individual tile styling
+ * This version includes an improved general animation for all tiles.
  */
 .tile {
   width: 100%;
@@ -95,8 +94,8 @@ input[type="text"] {
   /* Smooths out changes to size, color, and position */
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   
-  /* New, improved pop animation */
-  animation: tile-pop 0.2s ease;
+  /* The improved pop animation is applied to every tile on creation */
+  animation: tile-creation-pop 0.3s ease;
 }
 
 /* Displays the number inside the tile */
@@ -108,9 +107,7 @@ input[type="text"] {
   transform: translate(-50%, -50%);
 }
 
-/*
- * Colors for different tile values
- */
+/* Colors for different tile values */
 .tile-0 { background-color: #ffffff; }
 .tile-2 { background-color: #f3effa; }
 .tile-4 { background-color: #e3dcf4; }
@@ -119,21 +116,22 @@ input[type="text"] {
 .tile-32 { background-color: #a88bd1; }
 .tile-64 { background-color: #9971c4; color: #fff; }
 .tile-128 { background-color: #8856b7; color: #fff; }
-.tile-256 { background-color: #753aa7; color: #fff; } /* Typo fixed from '.tole-256' */
+.tile-256 { background-color: #753aa7; color: #fff; }
 .tile-512 { background-color: #662d99; color: #fff; }
 .tile-1024 { background-color: #561f89; color: #fff; }
 .tile-2048 { background-color: #470d7f; color: #fff; }
 
 /*
  * Improved pop animation with a slight bounce effect
+ * This will run for EVERY tile that is drawn on the board after a move.
  */
-@keyframes tile-pop {
+@keyframes tile-creation-pop {
   0% {
-    transform: scale(0.8);
+    transform: scale(0.7);
     opacity: 0;
   }
   80% {
-    transform: scale(1.05);
+    transform: scale(1.05); /* Slight bounce effect */
     opacity: 1;
   }
   100% {
@@ -142,9 +140,7 @@ input[type="text"] {
   }
 }
 
-/*
- * Leaderboard styling
- */
+/* Leaderboard styling */
 #leaderboard {
   margin-top: 20px;
   text-align: left;
