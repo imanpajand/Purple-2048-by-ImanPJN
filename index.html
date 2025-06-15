@@ -15,14 +15,18 @@
   <body>
     <div class="container">
       <h1>Purple 2048</h1>
-      <button onclick="connectWallet()" id="connectWalletBtn">🔗 Connect Wallet</button>
-      <button id="gmButton">GM ✨</button>
+      <div class="top-buttons-wrapper">
+        <button onclick="connectWallet()" id="connectWalletBtn">🔗 Connect Wallet</button>
+        <button id="gmButton">GM ✨</button>
+      </div>
       <div id="game"></div>
-      <form id="scoreForm">
+     <form id="scoreForm">
         <input type="text" id="playerName" placeholder="Enter your name" maxlength="16" required />
-        <button type="submit">Submit Score</button>
+        <div class="bottom-buttons-wrapper">
+          <button type="submit">Submit Score</button>
+          <button type="button" id="leaderboardToggle">Show Leaderboard</button>
+        </div>
       </form>
-      <button id="leaderboardToggle">Show Leaderboard</button>
       <div id="leaderboard" style="display: none;"></div>
       <p class="warning">⛔ Don't cheat — your wallet history is public!</p>
     </div>
