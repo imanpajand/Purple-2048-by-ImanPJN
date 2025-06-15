@@ -1,111 +1,122 @@
 /*
  * =========================================
  * Purple 2048 - Stylesheet
- * New Dynamic & Responsive Version
+ * Final Flexbox Viewport-Fit Version
  * =========================================
  */
 
-/* Main styling for the page body */
+/* Force the layout to take up the full screen height */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent any accidental scroll */
+}
+
+/* * Use Flexbox to structure the main components (container and footer).
+ * This is the core of the solution to make the layout fit the screen.
+*/
 body {
   background: url("assets/bg.jpg") no-repeat center center fixed;
   background-size: cover;
   font-family: 'Changa', sans-serif;
-  margin: 0;
-  padding: 20px 10px; /* Added padding for mobile screen edges */
   color: #3a2f58;
-  overflow-x: hidden;
-  box-sizing: border-box; /* Ensures padding doesn't add to width */
+  box-sizing: border-box;
+
+  /* Flexbox settings */
+  display: flex;
+  flex-direction: column;
 }
 
-/* Main container for the game interface */
+/* * The main container will now grow to fill all available vertical space,
+ * pushing the footer to the very bottom of the screen.
+*/
 .container {
   max-width: 500px;
-  margin: 0 auto; /* Removed top/bottom margin for more compact view */
-  padding: 20px;
+  width: 95%; /* Use percentage for better responsiveness */
+  margin: 0 auto;
+  padding: 10px 15px; /* Reduced padding */
   background-color: rgba(255, 255, 255, 0.85);
   border-radius: 20px;
-  box-shadow: 0 0 30px rgba(180, 162, 219, 0.4);
+  box-shadow: 0 0 20px rgba(180, 162, 219, 0.4);
   text-align: center;
-  position: relative;
+  
+  /* Flexbox Item settings */
+  flex-grow: 1; /* This is the magic property! */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically within the container */
 }
 
-/* Reduced spacing for the main title */
+/* Further reduced spacing for the title */
 h1 {
-  font-size: 2.2rem; /* Slightly smaller for mobile */
-  margin-top: 5px;   /* Reduced top margin */
-  margin-bottom: 15px; /* Reduced bottom margin */
+  font-size: 2rem;
+  margin: 5px 0 10px 0;
   color: #6e5aa0;
   text-shadow: 1px 1px 2px #fff;
+  flex-shrink: 0; /* Prevent title from shrinking */
 }
 
-/* New vibrant blue color for main action buttons */
+/* Buttons styling */
 button {
-  background-color: #3A7DFF; /* New vibrant fantasy blue */
-  color: #ffffff; /* White text for better contrast */
+  background-color: #3A7DFF;
+  color: #ffffff;
   border: none;
-  padding: 12px 20px;
-  margin: 5px;
+  padding: 10px 15px;
+  margin: 3px;
   border-radius: 12px;
-  font-size: 1rem;
+  font-size: 0.9rem; /* Slightly smaller font */
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 button:hover {
-  background-color: #5C95FF; /* Lighter blue on hover */
+  background-color: #5C95FF;
   transform: scale(1.05);
 }
 
-/* Specific styling for the score submission button */
 #scoreForm button {
-    background-color: #E06377; /* A contrasting pink/red */
+  background-color: #E06377;
 }
 #scoreForm button:hover {
-    background-color: #F28394;
+  background-color: #F28394;
 }
 
 input[type="text"] {
-  padding: 10px;
+  padding: 8px;
   width: 80%;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin: 5px auto;
   border: 1px solid #c9bee5;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   text-align: center;
-}
-
-/* Resized and repositioned warning text */
-.warning {
-  color: #a02e2e;
-  font-size: 0.75rem; /* Made font size smaller */
-  margin: 15px 0 5px 0;   /* Adjusted margin */
+  flex-shrink: 0;
 }
 
 /* Game board grid */
 #game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin: 20px 0;
+  gap: 8px; /* Reduced gap */
+  margin: 10px 0;
+  /* The game grid will not grow or shrink, maintaining its aspect ratio */
 }
 
 /* Individual tile styling */
 .tile {
   width: 100%;
-  padding-top: 100%; /* Maintain square aspect ratio */
-  border-radius: 10px;
+  padding-top: 100%;
+  border-radius: 8px; /* Slightly smaller radius */
   position: relative;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: bold;
-  color: #fff; /* White text for all tiles for better contrast */
-  
+  color: #fff;
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   animation: tile-creation-pop 0.3s ease;
 }
 
-/* Displays the number inside the tile */
 .tile::after {
   content: attr(data-value);
   position: absolute;
@@ -114,12 +125,7 @@ input[type="text"] {
   transform: translate(-50%, -50%);
 }
 
-/*
- * =========================================
- * NEW DYNAMIC TILE COLOR PALETTE
- * Blue -> Purple -> Pink progression
- * =========================================
- */
+/* DYNAMIC TILE COLOR PALETTE */
 .tile-0 { background-color: #cdc1e4; }
 .tile-2 { background-color: #a9d6e5; color: #333; }
 .tile-4 { background-color: #89c2d9; color: #333; }
@@ -127,16 +133,14 @@ input[type="text"] {
 .tile-16 { background-color: #468faf; }
 .tile-32 { background-color: #2c7da0; }
 .tile-64 { background-color: #2a6f97; }
-.tile-128 { background-color: #5854a6; } /* Transition to Purple */
+.tile-128 { background-color: #5854a6; }
 .tile-256 { background-color: #8d62aa; }
-.tile-512 { background-color: #c77dff; } /* Vibrant Pink/Purple */
+.tile-512 { background-color: #c77dff; }
 .tile-1024 { background-color: #e06377; }
 .tile-2048 { background-color: #f25278; }
 .tile-4096 { background-color: #ff0054; }
 .tile-8192 { background-color: #ff0000; }
 
-
-/* Animation for new tiles */
 @keyframes tile-creation-pop {
   0% { transform: scale(0.7); opacity: 0; }
   80% { transform: scale(1.05); opacity: 1; }
@@ -145,23 +149,35 @@ input[type="text"] {
 
 /* Leaderboard styling */
 #leaderboard {
-  margin-top: 15px;
+  margin-top: 10px;
   text-align: left;
   background: rgba(234, 230, 248, 0.6);
-  padding: 15px;
+  padding: 10px;
   border-radius: 10px;
-  max-height: 250px;
+  /* Let it take available space but not push other elements */
+  flex-grow: 1;
+  min-height: 0; /* Important for flexbox scrolling */
   overflow-y: auto;
 }
 
-/* Compact footer styling */
+.warning {
+  color: #a02e2e;
+  font-size: 0.75rem;
+  margin: 8px 0 5px 0;
+  flex-shrink: 0;
+}
+
+/* The footer will not grow and will be pushed to the bottom */
 .footer {
   text-align: center;
-  font-size: 0.8rem; /* Slightly smaller font */
-  padding: 10px 0 0 0;  /* Reduced padding */
-  margin-top: 20px; /* Reduced margin */
+  font-size: 0.75rem;
+  padding: 5px 0;
+  margin-top: 10px;
   color: #6e5aa0;
+  background-color: rgba(255, 255, 255, 0.9);
   border-top: 1px solid #dcd4ed;
+  flex-shrink: 0; /* Prevents the footer from shrinking */
+  width: 100%;
 }
 
 .footer a {
@@ -172,4 +188,22 @@ input[type="text"] {
 
 .footer a:hover {
   text-decoration: underline;
+}
+
+/* Media query for very short screens to prevent overflow */
+@media (max-height: 740px) {
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+  }
+  button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  .tile {
+    font-size: 1.2rem;
+  }
+  #game {
+    gap: 5px;
+  }
 }
