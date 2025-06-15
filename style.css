@@ -1,7 +1,7 @@
 /*
  * =========================================
  * Purple 2048 - Stylesheet
- * FINAL - New Button Layout Version
+ * FINAL - Integrated Footer Version
  * =========================================
  */
 
@@ -50,50 +50,39 @@ h1 {
   text-shadow: 1px 1px 2px #fff;
 }
 
-/*
- * =========================================
- * NEW BUTTON LAYOUT STYLES
- * =========================================
- */
-
-/* --- Top Buttons Wrapper --- */
+/* --- Button Layout Styles --- */
 .top-buttons-wrapper {
   display: flex;
   justify-content: center;
-  align-items: center; /* Aligns buttons vertically */
-  gap: 8px; /* Space between buttons */
+  align-items: center;
+  gap: 8px;
 }
 
-/* --- Main Buttons Styling --- */
 button {
   border: none;
   border-radius: 10px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem; /* Base font size */
+  font-size: 0.9rem;
 }
 button:hover {
   transform: scale(1.05);
 }
 
-/* Connect Wallet Button */
 #connectWalletBtn {
   background-color: #3A7DFF;
   color: #ffffff;
   padding: 8px 14px;
 }
 
-/* GM Button (Smaller) */
 #gmButton {
-  background-color: #5C95FF; /* Lighter blue */
+  background-color: #5C95FF;
   color: #ffffff;
-  padding: 6px 10px; /* Smaller padding */
-  font-size: 0.75rem; /* Smaller font */
+  padding: 6px 10px;
+  font-size: 0.75rem;
 }
 
-
-/* --- Bottom Buttons & Form --- */
 #scoreForm {
   display: flex;
   flex-direction: column;
@@ -103,8 +92,8 @@ button:hover {
 
 input[type="text"] {
   padding: 8px;
-  width: 90%; /* Match the width of the button wrapper */
-  box-sizing: border-box; /* Important for correct width calculation */
+  width: 90%;
+  box-sizing: border-box;
   margin-bottom: 8px;
   border: 1px solid #c9bee5;
   border-radius: 8px;
@@ -114,17 +103,16 @@ input[type="text"] {
 
 .bottom-buttons-wrapper {
   display: flex;
-  justify-content: space-between; /* Pushes buttons to the sides */
-  width: 90%; /* Match the input field width */
+  justify-content: space-between;
+  width: 90%;
 }
 
 .bottom-buttons-wrapper button {
-  flex-basis: 48%; /* Each button takes up almost half the space */
-  padding: 10px 5px; /* Vertical padding, minimal horizontal */
+  flex-basis: 48%;
+  padding: 10px 5px;
   box-sizing: border-box;
 }
 
-/* Submit Score Button */
 #scoreForm button[type="submit"] {
   background-color: #E06377;
   color: white;
@@ -133,7 +121,6 @@ input[type="text"] {
   background-color: #F28394;
 }
 
-/* Leaderboard Button */
 #leaderboardToggle {
   background-color: #3A7DFF;
   color: white;
@@ -142,7 +129,7 @@ input[type="text"] {
     background-color: #5C95FF;
 }
 
-/* --- Game Board (Unchanged) --- */
+/* --- Game Board --- */
 #game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -162,7 +149,7 @@ input[type="text"] {
 }
 .tile::after { content: attr(data-value); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
-/* --- Tile Colors (Unchanged) --- */
+/* --- Tile Colors --- */
 .tile-0 { background-color: #cdc1e4; }
 .tile-2 { background-color: #a9d6e5; color: #333; }
 .tile-4 { background-color: #89c2d9; color: #333; }
@@ -178,12 +165,45 @@ input[type="text"] {
 
 @keyframes tile-creation-pop { 0% { transform: scale(0.7); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-/* --- Leaderboard & Footer (Unchanged) --- */
+/* --- Leaderboard & Warning --- */
 #leaderboard { margin-top: 8px; text-align: left; background: rgba(234, 230, 248, 0.6); padding: 8px; border-radius: 8px; overflow-y: auto; max-height: 100px; }
 .warning { color: #a02e2e; font-size: 0.7rem; margin: 5px 0 0 0; }
-.footer { width: 100%; max-width: 480px; margin: 8px auto 0 auto; text-align: center; font-size: 0.7rem; padding-top: 5px; color: #6e5aa0; border-top: 1px solid #dcd4ed; }
-.footer a { color: #6e5aa0; text-decoration: none; margin: 0 3px; }
-.footer a:hover { text-decoration: underline; }
+
+/*
+ * =========================================
+ * UPDATED FOOTER STYLE
+ * Now that the footer is inside the main container,
+ * the border and background are no longer needed.
+ * =========================================
+ */
+.footer {
+  text-align: center;
+  font-size: 0.7rem;
+  padding: 5px 0 0 0;
+  margin: 10px auto 0 auto; /* Centered with a bit of top margin */
+  color: #6e5aa0;
+  width: 100%;
+}
+
+.footer p {
+  margin: 0; /* Removes default paragraph margin */
+}
+
+.footer a {
+  color: #6e5aa0;
+  text-decoration: none;
+  margin: 0 3px;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
 
 /* --- Media Query for Larger Screens --- */
-@media (min-width: 500px) and (min-height: 700px) { h1 { font-size: 2.2rem; } button { padding: 12px 20px; font-size: 1rem; } input[type="text"] { padding: 10px; font-size: 1rem; } .tile { font-size: 1.5rem; } #game { gap: 10px; } }
+@media (min-width: 500px) and (min-height: 700px) {
+  h1 { font-size: 2.2rem; }
+  button { padding: 12px 20px; font-size: 1rem; }
+  input[type="text"] { padding: 10px; font-size: 1rem; }
+  .tile { font-size: 1.5rem; }
+  #game { gap: 10px; }
+}
