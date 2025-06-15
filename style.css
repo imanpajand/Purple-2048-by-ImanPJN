@@ -46,57 +46,74 @@ h1 {
 /* Main wrapper for top section */
 .top-buttons-wrapper {
   display: flex;
-  justify-content: space-between; /* This pushes children to opposite ends */
+  justify-content: space-between;
   align-items: center;
-  width: 100%; /* Ensure it takes full width of the container */
+  width: 100%;
 }
 
 /* Wrapper for the left-aligned buttons */
 .button-group-left {
   display: flex;
   align-items: center;
-  gap: 8px; /* Space between the two buttons */
+  gap: 8px;
 }
 
-/* General Button Style */
-button {
-  border: none;
-  border-radius: 10px;
-  font-weight: bold;
+/* --- Shared Button Style --- */
+.button-63 {
+  align-items: center;
+  background-image: linear-gradient(144deg,#AF40FF, #5B42F3 50%,#00DDEB);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  display: flex;
+  font-family: Phantomsans, sans-serif;
+  font-size: 18px; /* ✅ یکسان‌سازی فونت */
+  justify-content: center;
+  line-height: 1em;
+  max-width: 100%;
+  min-width: 140px;
+  padding: 16px 24px; /* ✅ کاهش ارتفاع */
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-}
-button:hover {
-  transform: scale(1.05);
+  transition: transform 0.2s ease;
 }
 
-/* Connect Wallet Button */
-#connectWalletBtn {
-  background-color: #3A7DFF;
-  color: #ffffff;
-  padding: 7px 10px;
+/* --- GM Button (Light Green Variant, Smaller Width) --- */
+.button-63.gm-button {
+  background-image: linear-gradient(144deg, #a8ff78, #78ffd6 50%, #a8ff78);
+  min-width: 100px; /* ✅ عرض کمتر */
+  padding: 16px 18px; /* ✅ عرض و ارتفاع همسان */
+  font-size: 18px;     /* ✅ یکسان با connect */
 }
 
-/* GM Button (Smaller) */
-#gmButton {
-  background-color: #23f89f;
-  color: #ffffff;
-  padding: 7px 10px;
-  font-size: 1rem;
+
+@media (min-width: 768px) {
+  .button-63 {
+    font-size: 24px;
+    min-width: 196px;
+  }
+  .button-63.gm-button {
+    font-size: 20px;
+    min-width: 150px;
+  }
 }
 
-/* Score Display styling to match the main button */
+/* --- Score Display --- */
 #score-display {
   background-color: rgba(234, 229, 250, 0.8);
   color: #3a2f58;
-  padding: 8px 14px; /* Same padding as the main button for vertical alignment */
+  padding: 8px 14px;
   border-radius: 10px;
   font-weight: bold;
   font-size: 0.9rem;
   border: 1px solid #c9bee5;
 }
-
 
 /* --- Bottom Buttons & Form --- */
 #scoreForm {
@@ -105,7 +122,6 @@ button:hover {
   align-items: center;
   margin: 5px 0;
 }
-
 input[type="text"] {
   padding: 8px;
   width: 90%;
@@ -116,33 +132,13 @@ input[type="text"] {
   font-size: 0.8rem;
   text-align: center;
 }
-
 .bottom-buttons-wrapper {
   display: flex;
   justify-content: space-between;
   width: 90%;
 }
-
 .bottom-buttons-wrapper button {
   flex-basis: 48%;
-  padding: 10px 5px;
-  box-sizing: border-box;
-}
-
-#scoreForm button[type="submit"] {
-  background-color: #E06377;
-  color: white;
-}
-#scoreForm button[type="submit"]:hover {
-  background-color: #F28394;
-}
-
-#leaderboardToggle {
-  background-color: #3A7DFF;
-  color: white;
-}
-#leaderboardToggle:hover {
-    background-color: #5C95FF;
 }
 
 /* --- Game Board --- */
@@ -161,9 +157,27 @@ input[type="text"] {
   font-weight: bold;
   color: #fff;
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  animation: tile-creation-pop 0.3s ease;
+  animation: tile-creation-pop 0.3s ease, pulse 2s infinite;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }
-.tile::after { content: attr(data-value); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.tile::after {
+  content: attr(data-value);
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+@keyframes tile-creation-pop {
+  0% { transform: scale(0.7); opacity: 0; }
+  80% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes pulse {
+  0%   { box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+  50%  { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
+  100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+}
 
 /* --- Tile Colors --- */
 .tile-0    { background-color: #e9e4f5; }
@@ -179,11 +193,16 @@ input[type="text"] {
 .tile-1024 { background-color: #F700FF; }
 .tile-2028 { background-color: #f25278; color: #fff; }
 
-@keyframes tile-creation-pop { 0% { transform: scale(0.7); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-
 /* --- Leaderboard & Footer --- */
-#leaderboard { margin-top: 8px; text-align: left; background: rgba(234, 230, 248, 0.6); padding: 8px; border-radius: 8px; overflow-y: auto; max-height: 100px; }
-
+#leaderboard {
+  margin-top: 8px;
+  text-align: left;
+  background: rgba(234, 230, 248, 0.6);
+  padding: 8px;
+  border-radius: 8px;
+  overflow-y: auto;
+  max-height: 100px;
+}
 .footer {
   text-align: center;
   font-size: 0.7rem;
@@ -192,13 +211,19 @@ input[type="text"] {
   color: #6e5aa0;
 }
 .footer p { margin: 0; }
-.footer a { color: #6e5aa0; text-decoration: none; margin: 0 3px; }
-.footer a:hover { text-decoration: underline; }
+.footer a {
+  color: #6e5aa0;
+  text-decoration: none;
+  margin: 0 3px;
+}
+.footer a:hover {
+  text-decoration: underline;
+}
 
 /* --- Media Query for Larger Screens --- */
 @media (min-width: 500px) and (min-height: 700px) {
   h1 { font-size: 2.2rem; }
-  button, #score-display { padding: 12px 20px; font-size: 1rem; }
+  .button-63, #score-display { padding: 12px 20px; font-size: 1rem; }
   input[type="text"] { padding: 10px; font-size: 1rem; }
   .tile { font-size: 1.5rem; }
   #game { gap: 10px; }
