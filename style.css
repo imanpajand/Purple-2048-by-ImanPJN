@@ -1,7 +1,7 @@
 /*
  * =========================================
  * Purple 2048 - Stylesheet
- * FINAL - Compact, Viewport-Fit & Mobile-First Version
+ * FINAL - New Button Layout Version
  * =========================================
  */
 
@@ -11,7 +11,7 @@ html, body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  -webkit-text-size-adjust: 100%; /* Prevents text resizing on mobile */
+  -webkit-text-size-adjust: 100%;
 }
 
 /* --- Flexbox Layout --- */
@@ -24,8 +24,8 @@ body {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center container horizontally */
-  justify-content: center; /* Center container vertically */
+  align-items: center;
+  justify-content: center;
 }
 
 /* --- Main Content Container --- */
@@ -37,94 +37,130 @@ body {
   border-radius: 20px;
   box-shadow: 0 0 20px rgba(180, 162, 219, 0.4);
   text-align: center;
-  
-  /* Flexbox settings to manage internal content */
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Distribute space between elements */
+  justify-content: space-between;
 }
 
 /* --- Compact Title --- */
 h1 {
-  font-size: 1.8rem; /* Smaller base font size */
-  margin: 0 0 8px 0; /* Minimal margin */
+  font-size: 1.8rem;
+  margin: 0 0 8px 0;
   color: #6e5aa0;
   text-shadow: 1px 1px 2px #fff;
 }
 
-/* --- Smaller Buttons & Inputs --- */
-.buttons-group {
+/*
+ * =========================================
+ * NEW BUTTON LAYOUT STYLES
+ * =========================================
+ */
+
+/* --- Top Buttons Wrapper --- */
+.top-buttons-wrapper {
   display: flex;
   justify-content: center;
+  align-items: center; /* Aligns buttons vertically */
+  gap: 8px; /* Space between buttons */
 }
 
+/* --- Main Buttons Styling --- */
 button {
-  background-color: #3A7DFF;
-  color: #ffffff;
   border: none;
-  padding: 8px 14px; /* Reduced padding */
-  margin: 2px;
   border-radius: 10px;
-  font-size: 0.8rem; /* Smaller font */
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-size: 0.9rem; /* Base font size */
 }
-
 button:hover {
-  background-color: #5C95FF;
   transform: scale(1.05);
 }
 
+/* Connect Wallet Button */
+#connectWalletBtn {
+  background-color: #3A7DFF;
+  color: #ffffff;
+  padding: 8px 14px;
+}
+
+/* GM Button (Smaller) */
+#gmButton {
+  background-color: #5C95FF; /* Lighter blue */
+  color: #ffffff;
+  padding: 6px 10px; /* Smaller padding */
+  font-size: 0.75rem; /* Smaller font */
+}
+
+
+/* --- Bottom Buttons & Form --- */
 #scoreForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin: 5px 0;
-}
-
-#scoreForm button {
-  background-color: #E06377;
-}
-
-#scoreForm button:hover {
-  background-color: #F28394;
 }
 
 input[type="text"] {
   padding: 8px;
-  width: 70%;
-  margin: 5px auto;
+  width: 90%; /* Match the width of the button wrapper */
+  box-sizing: border-box; /* Important for correct width calculation */
+  margin-bottom: 8px;
   border: 1px solid #c9bee5;
   border-radius: 8px;
   font-size: 0.8rem;
   text-align: center;
 }
 
-/* --- Compact Game Board --- */
+.bottom-buttons-wrapper {
+  display: flex;
+  justify-content: space-between; /* Pushes buttons to the sides */
+  width: 90%; /* Match the input field width */
+}
+
+.bottom-buttons-wrapper button {
+  flex-basis: 48%; /* Each button takes up almost half the space */
+  padding: 10px 5px; /* Vertical padding, minimal horizontal */
+  box-sizing: border-box;
+}
+
+/* Submit Score Button */
+#scoreForm button[type="submit"] {
+  background-color: #E06377;
+  color: white;
+}
+#scoreForm button[type="submit"]:hover {
+  background-color: #F28394;
+}
+
+/* Leaderboard Button */
+#leaderboardToggle {
+  background-color: #3A7DFF;
+  color: white;
+}
+#leaderboardToggle:hover {
+    background-color: #5C95FF;
+}
+
+/* --- Game Board (Unchanged) --- */
 #game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px; /* Reduced gap */
+  gap: 6px;
   margin: 8px 0;
 }
-
 .tile {
   width: 100%;
   padding-top: 100%;
   border-radius: 6px;
   position: relative;
-  font-size: 1.3rem; /* Scaled down font size */
+  font-size: 1.3rem;
   font-weight: bold;
   color: #fff;
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   animation: tile-creation-pop 0.3s ease;
 }
-
-.tile::after {
-  content: attr(data-value);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
+.tile::after { content: attr(data-value); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
 /* --- Tile Colors (Unchanged) --- */
 .tile-0 { background-color: #cdc1e4; }
@@ -139,61 +175,15 @@ input[type="text"] {
 .tile-512 { background-color: #c77dff; }
 .tile-1024 { background-color: #e06377; }
 .tile-2048 { background-color: #f25278; }
-.tile-4096 { background-color: #ff0054; }
-.tile-8192 { background-color: #ff0000; }
 
-@keyframes tile-creation-pop {
-  0% { transform: scale(0.7); opacity: 0; }
-  80% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
+@keyframes tile-creation-pop { 0% { transform: scale(0.7); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-/* --- Leaderboard & Footer --- */
-#leaderboard {
-  margin-top: 8px;
-  text-align: left;
-  background: rgba(234, 230, 248, 0.6);
-  padding: 8px;
-  border-radius: 8px;
-  overflow-y: auto;
-  /* Let it take a small amount of space */
-  max-height: 100px;
-}
+/* --- Leaderboard & Footer (Unchanged) --- */
+#leaderboard { margin-top: 8px; text-align: left; background: rgba(234, 230, 248, 0.6); padding: 8px; border-radius: 8px; overflow-y: auto; max-height: 100px; }
+.warning { color: #a02e2e; font-size: 0.7rem; margin: 5px 0 0 0; }
+.footer { width: 100%; max-width: 480px; margin: 8px auto 0 auto; text-align: center; font-size: 0.7rem; padding-top: 5px; color: #6e5aa0; border-top: 1px solid #dcd4ed; }
+.footer a { color: #6e5aa0; text-decoration: none; margin: 0 3px; }
+.footer a:hover { text-decoration: underline; }
 
-.warning {
-  color: #a02e2e;
-  font-size: 0.7rem; /* Very small */
-  margin: 5px 0 0 0;
-}
-
-.footer {
-  width: 100%; /* Make footer span the width */
-  max-width: 480px; /* But not wider than the container */
-  margin: 8px auto 0 auto;
-  text-align: center;
-  font-size: 0.7rem;
-  padding-top: 5px;
-  color: #6e5aa0;
-  border-top: 1px solid #dcd4ed;
-}
-
-.footer a {
-  color: #6e5aa0;
-  text-decoration: none;
-  margin: 0 3px;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
-
-/* * Media Query for slightly larger screens (Desktop) 
- * This makes fonts and elements bigger when there is enough space.
-*/
-@media (min-width: 500px) and (min-height: 700px) {
-  h1 { font-size: 2.2rem; }
-  button { padding: 12px 20px; font-size: 1rem; }
-  input[type="text"] { padding: 10px; font-size: 1rem; }
-  .tile { font-size: 1.5rem; }
-  #game { gap: 10px; }
-}
+/* --- Media Query for Larger Screens --- */
+@media (min-width: 500px) and (min-height: 700px) { h1 { font-size: 2.2rem; } button { padding: 12px 20px; font-size: 1rem; } input[type="text"] { padding: 10px; font-size: 1rem; } .tile { font-size: 1.5rem; } #game { gap: 10px; } }
