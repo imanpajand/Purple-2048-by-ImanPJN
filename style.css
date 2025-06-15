@@ -61,7 +61,6 @@ h1 {
 /* --- Shared Button Style --- */
 .button-63 {
   align-items: center;
-  background-image: linear-gradient(144deg,#AF40FF, #5B42F3 50%,#00DDEB);
   border: 0;
   border-radius: 8px;
   box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
@@ -72,9 +71,8 @@ h1 {
   font-size: 20px;
   justify-content: center;
   line-height: 1em;
-  max-width: 100%;
-  min-width: 140px;
-  padding: 19px 24px;
+  min-width: 160px;
+  padding: 18px 24px;
   text-decoration: none;
   user-select: none;
   -webkit-user-select: none;
@@ -83,33 +81,33 @@ h1 {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
+
 .button-63:active,
 .button-63:hover {
   outline: 0;
   transform: scale(1.05);
 }
 
-/* --- Submit Score Button (Red Variant) --- */
-.button-63.submit-score {
-  background-image: linear-gradient(144deg, #ff416c, #ff4b2b 50%, #ff416c);
+/* --- Button Variants --- */
+.button-63.connect-wallet {
+  background-image: linear-gradient(144deg,#AF40FF, #5B42F3 50%,#00DDEB);
 }
 
-/* --- GM Button (Light Green Variant, Smaller Width) --- */
 .button-63.gm-button {
-  background-image: linear-gradient(144deg, #a8ff78, #78ffd6 50%, #a8ff78);
-  min-width: 120px;
-  padding: 16px 20px;
+    min-width: 100px; /* ✅ عرض کمتر */
+  padding: 11px 18px; /* ✅ عرض و ارتفاع همسان */
   font-size: 18px;
+  background-image: linear-gradient(144deg, #a8ff78, #78ffd6 50%, #a8ff78);
+}
+
+.button-63.submit-score {
+  background-image: linear-gradient(144deg, #ff416c, #ff4b2b 50%, #ff416c);
 }
 
 @media (min-width: 768px) {
   .button-63 {
     font-size: 24px;
     min-width: 196px;
-  }
-  .button-63.gm-button {
-    font-size: 20px;
-    min-width: 150px;
   }
 }
 
