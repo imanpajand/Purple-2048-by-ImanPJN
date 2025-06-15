@@ -14,7 +14,7 @@ window.onload = () => {
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
-  connectWallet();
+  // We don't call connectWallet() on load anymore, user clicks the button.
 };
 
 async function connectWallet() {
@@ -66,7 +66,9 @@ async function submitScore(e) {
 }
 
 async function loadLeaderboard() {
-  if (!provider) return;
+  if (!provider) { // If provider is not set, try to set it up for read-only
+    provider = new ethers.BrowserProvider(window.ethereum);
+  }
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
   const logs = await readContract.queryFilter("GM");
 
@@ -100,6 +102,14 @@ function toggleLeaderboard() {
   }
 }
 
+// ✅ تابع جدید برای آپدیت امتیاز
+function updateScoreDisplay() {
+  const scoreEl = document.getElementById("score-display");
+  if (scoreEl) {
+    scoreEl.innerText = `Score: ${currentScore}`;
+  }
+}
+
 // ----------------- GAME LOGIC ------------------
 
 let grid = [];
@@ -111,6 +121,7 @@ function initGame() {
   currentScore = 0;
   gameOver = false;
   updateGameBoard();
+  updateScoreDisplay(); // ✅ آپدیت امتیاز در شروع بازی
 }
 
 function resetGame() {
@@ -121,12 +132,11 @@ function setupControls() {
   window.onkeydown = (e) => {
     if (gameOver) return;
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-      e.preventDefault(); // جلوگیری از اسکرول
+      e.preventDefault();
       move(e.key);
     }
   };
 
-  // لمس موبایل
   let startX, startY;
   document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
@@ -179,7 +189,7 @@ function move(direction) {
     for (let i = 0; i < arr.length - 1; i++) {
       if (arr[i] === arr[i + 1]) {
         arr[i] *= 2;
-        currentScore += arr[i];
+        currentScore += arr[i]; // امتیاز اینجا اضافه می‌شود
         arr[i + 1] = 0;
       }
     }
@@ -212,6 +222,7 @@ function move(direction) {
   if (JSON.stringify(grid) !== JSON.stringify(clone)) {
     addRandomTile();
     updateGameBoard();
+    updateScoreDisplay(); // ✅ آپدیت امتیاز بعد از هر حرکت
     if (!canMove()) {
       gameOver = true;
       alert("💀 Game Over! امتیازت رو ثبت کن.");
