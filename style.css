@@ -75,14 +75,14 @@ button:hover {
 #connectWalletBtn {
   background-color: #3A7DFF;
   color: #ffffff;
-  padding: 8px 14px;
+  padding: 7px 10px;
 }
 
 /* GM Button (Smaller) */
 #gmButton {
   background-color: #23f89f;
   color: #ffffff;
-  padding: 6px 10px;
+  padding: 7px 10px;
   font-size: 1rem;
 }
 
