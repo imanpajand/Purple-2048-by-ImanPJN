@@ -150,18 +150,20 @@ input[type="text"] {
 .tile::after { content: attr(data-value); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
 /* --- Tile Colors --- */
-.tile-0 { background-color: #cdc1e4; }
-.tile-2 { background-color: #c084fc; color: #333; }
-.tile-4 { background-color: #a855f7; color: #333; }
-.tile-8 { background-color: #9333ea; }
-.tile-16 { background-color: #7e22ce; }
-.tile-32 { background-color: #6b21a8; }
-.tile-64 { background-color: #581c87; }
-.tile-128 { background-color: #4c1d95; }
-.tile-256 { background-color: #3b0764; }
-.tile-512 { background-color: #2e1065; }
-.tile-1024 { background-color: #1e1b4b; }
-.tile-2048 { background-color: #0f172a; }
+.tile-0    { background-color: #cdc1e4; }
+.tile-2    { background-color: #ede9fe; color: #333; }
+.tile-4    { background-color: #ddd6fe; color: #333; }
+.tile-8    { background-color: #c4b5fd; }              
+.tile-16   { background-color: #a78bfa; }       
+.tile-32   { background-color: #8b5cf6; }            
+.tile-64   { background-color: #7c3aed; }               
+.tile-128  { background-color: #6d28d9; }
+.tile-256  { background-color: #5b21b6; }
+.tile-512  { background-color: #EF6FF6; }                
+.tile-1024 { background-color: #F700FF; }
+.tile-2048 { background-color: #f25278; color: #fff; }
+.tile-4096 { background-color: #ff0054; color: #fff; }
+.tile-8192 { background-color: #ff0000; color: #fff; }
 
 @keyframes tile-creation-pop { 0% { transform: scale(0.7); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
