@@ -1,7 +1,7 @@
 /*
  * =========================================
  * Purple 2048 - Stylesheet
- * FINAL - Integrated Footer Version
+ * FINAL - Final Button/Score Layout
  * =========================================
  */
 
@@ -50,14 +50,28 @@ h1 {
   text-shadow: 1px 1px 2px #fff;
 }
 
-/* --- Button Layout Styles --- */
+/*
+ * =========================================
+ * NEW TOP BUTTONS LAYOUT STYLES
+ * =========================================
+ */
+
+/* Main wrapper for top section */
 .top-buttons-wrapper {
   display: flex;
-  justify-content: center;
+  justify-content: space-between; /* This pushes children to opposite ends */
   align-items: center;
-  gap: 8px;
+  width: 100%; /* Ensure it takes full width of the container */
 }
 
+/* Wrapper for the left-aligned buttons */
+.button-group-left {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between the two buttons */
+}
+
+/* General Button Style */
 button {
   border: none;
   border-radius: 10px;
@@ -70,12 +84,14 @@ button:hover {
   transform: scale(1.05);
 }
 
+/* Connect Wallet Button */
 #connectWalletBtn {
   background-color: #3A7DFF;
   color: #ffffff;
   padding: 8px 14px;
 }
 
+/* GM Button (Smaller) */
 #gmButton {
   background-color: #5C95FF;
   color: #ffffff;
@@ -83,6 +99,19 @@ button:hover {
   font-size: 0.75rem;
 }
 
+/* Score Display styling to match the main button */
+#score-display {
+  background-color: rgba(234, 229, 250, 0.8);
+  color: #3a2f58;
+  padding: 8px 14px; /* Same padding as the main button for vertical alignment */
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  border: 1px solid #c9bee5;
+}
+
+
+/* --- Bottom Buttons & Form --- */
 #scoreForm {
   display: flex;
   flex-direction: column;
@@ -154,57 +183,35 @@ input[type="text"] {
 .tile-2    { background-color: #d1b3ff; color: #333; }
 .tile-4    { background-color: #b980f5; color: #333; }
 .tile-8    { background-color: #a455f0; }
-.tile-16   { background-color: #9333ea; }       
-.tile-32   { background-color: #8b5cf6; }            
-.tile-64   { background-color: #7c3aed; }               
+.tile-16   { background-color: #9333ea; }
+.tile-32   { background-color: #8b5cf6; }
+.tile-64   { background-color: #7c3aed; }
 .tile-128  { background-color: #6d28d9; }
 .tile-256  { background-color: #5b21b6; }
-.tile-512  { background-color: #EF6FF6; }                
+.tile-512  { background-color: #EF6FF6; }
 .tile-1024 { background-color: #F700FF; }
-.tile-2048 { background-color: #f25278; color: #fff; }
-.tile-4096 { background-color: #ff0054; color: #fff; }
-.tile-8192 { background-color: #ff0000; color: #fff; }
+.tile-2028 { background-color: #f25278; color: #fff; }
 
 @keyframes tile-creation-pop { 0% { transform: scale(0.7); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-/* --- Leaderboard & Warning --- */
+/* --- Leaderboard & Footer --- */
 #leaderboard { margin-top: 8px; text-align: left; background: rgba(234, 230, 248, 0.6); padding: 8px; border-radius: 8px; overflow-y: auto; max-height: 100px; }
-.warning { color: #a02e2e; font-size: 0.7rem; margin: 5px 0 0 0; }
 
-/*
- * =========================================
- * UPDATED FOOTER STYLE
- * Now that the footer is inside the main container,
- * the border and background are no longer needed.
- * =========================================
- */
 .footer {
   text-align: center;
   font-size: 0.7rem;
   padding: 5px 0 0 0;
-  margin: 10px auto 0 auto; /* Centered with a bit of top margin */
+  margin: 10px auto 0 auto;
   color: #6e5aa0;
-  width: 100%;
 }
-
-.footer p {
-  margin: 0; /* Removes default paragraph margin */
-}
-
-.footer a {
-  color: #6e5aa0;
-  text-decoration: none;
-  margin: 0 3px;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
+.footer p { margin: 0; }
+.footer a { color: #6e5aa0; text-decoration: none; margin: 0 3px; }
+.footer a:hover { text-decoration: underline; }
 
 /* --- Media Query for Larger Screens --- */
 @media (min-width: 500px) and (min-height: 700px) {
   h1 { font-size: 2.2rem; }
-  button { padding: 12px 20px; font-size: 1rem; }
+  button, #score-display { padding: 12px 20px; font-size: 1rem; }
   input[type="text"] { padding: 10px; font-size: 1rem; }
   .tile { font-size: 1.5rem; }
   #game { gap: 10px; }
