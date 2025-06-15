@@ -69,12 +69,12 @@ h1 {
   color: #FFFFFF;
   display: flex;
   font-family: Phantomsans, sans-serif;
-  font-size: 18px; /* ✅ یکسان‌سازی فونت */
+  font-size: 20px;
   justify-content: center;
   line-height: 1em;
   max-width: 100%;
   min-width: 140px;
-  padding: 16px 24px; /* ✅ کاهش ارتفاع */
+  padding: 19px 24px;
   text-decoration: none;
   user-select: none;
   -webkit-user-select: none;
@@ -83,15 +83,24 @@ h1 {
   cursor: pointer;
   transition: transform 0.2s ease;
 }
+.button-63:active,
+.button-63:hover {
+  outline: 0;
+  transform: scale(1.05);
+}
+
+/* --- Submit Score Button (Red Variant) --- */
+.button-63.submit-score {
+  background-image: linear-gradient(144deg, #ff416c, #ff4b2b 50%, #ff416c);
+}
 
 /* --- GM Button (Light Green Variant, Smaller Width) --- */
 .button-63.gm-button {
   background-image: linear-gradient(144deg, #a8ff78, #78ffd6 50%, #a8ff78);
-  min-width: 100px; /* ✅ عرض کمتر */
-  padding: 16px 18px; /* ✅ عرض و ارتفاع همسان */
-  font-size: 18px;     /* ✅ یکسان با connect */
+  min-width: 120px;
+  padding: 16px 20px;
+  font-size: 18px;
 }
-
 
 @media (min-width: 768px) {
   .button-63 {
