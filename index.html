@@ -4,9 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Purple 2048 by ImanPJN</title>
-
     <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
-
     <link rel="stylesheet" href="style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,10 +15,13 @@
       <h1>Purple 2048</h1>
 
       <div class="top-buttons-wrapper">
-        <button onclick="connectWallet()" id="connectWalletBtn">🔗 Connect Wallet</button>
-	<button id="gmButton">GM ✨</button>
+        <div class="button-group-left">
+          <button onclick="connectWallet()" id="connectWalletBtn">🔗 Connect Wallet</button>
+          <button id="gmButton">GM ✨</button>
+        </div>
+        <div id="score-display">Score: 0</div>
       </div>
-
+      
       <div id="game"></div>
 
       <form id="scoreForm">
@@ -41,8 +42,9 @@
           <a href="https://t.me/imanpjnir" target="_blank">Telegram</a>
         </p>
       </footer>
+    </div>
 
-    </div> <audio autoplay loop>
+    <audio autoplay loop>
       <source src="music/purple-chill.mp3" type="audio/mpeg" />
     </audio>
 
