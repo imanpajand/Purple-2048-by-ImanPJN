@@ -151,10 +151,10 @@ input[type="text"] {
 
 /* --- Tile Colors --- */
 .tile-0    { background-color: #e9e4f5; }
-.tile-2    { background-color: #ede9fe; color: #333; }
-.tile-4    { background-color: #ddd6fe; color: #333; }
-.tile-8    { background-color: #c4b5fd; }              
-.tile-16   { background-color: #a78bfa; }       
+.tile-2    { background-color: #d1b3ff; color: #333; }
+.tile-4    { background-color: #b980f5; color: #333; }
+.tile-8    { background-color: #a455f0; }
+.tile-16   { background-color: #9333ea; }       
 .tile-32   { background-color: #8b5cf6; }            
 .tile-64   { background-color: #7c3aed; }               
 .tile-128  { background-color: #6d28d9; }
