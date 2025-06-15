@@ -1,75 +1,74 @@
 /*
  * =========================================
  * Purple 2048 - Stylesheet
- * Final Flexbox Viewport-Fit Version
+ * FINAL - Compact, Viewport-Fit & Mobile-First Version
  * =========================================
  */
 
-/* Force the layout to take up the full screen height */
+/* --- Base Setup --- */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent any accidental scroll */
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%; /* Prevents text resizing on mobile */
 }
 
-/* * Use Flexbox to structure the main components (container and footer).
- * This is the core of the solution to make the layout fit the screen.
-*/
+/* --- Flexbox Layout --- */
 body {
   background: url("assets/bg.jpg") no-repeat center center fixed;
   background-size: cover;
   font-family: 'Changa', sans-serif;
   color: #3a2f58;
   box-sizing: border-box;
-
-  /* Flexbox settings */
+  padding: 10px;
   display: flex;
   flex-direction: column;
+  align-items: center; /* Center container horizontally */
+  justify-content: center; /* Center container vertically */
 }
 
-/* * The main container will now grow to fill all available vertical space,
- * pushing the footer to the very bottom of the screen.
-*/
+/* --- Main Content Container --- */
 .container {
-  max-width: 500px;
-  width: 95%; /* Use percentage for better responsiveness */
-  margin: 0 auto;
-  padding: 10px 15px; /* Reduced padding */
-  background-color: rgba(255, 255, 255, 0.85);
+  max-width: 480px;
+  width: 100%;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   box-shadow: 0 0 20px rgba(180, 162, 219, 0.4);
   text-align: center;
   
-  /* Flexbox Item settings */
-  flex-grow: 1; /* This is the magic property! */
+  /* Flexbox settings to manage internal content */
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center content vertically within the container */
+  justify-content: space-between; /* Distribute space between elements */
 }
 
-/* Further reduced spacing for the title */
+/* --- Compact Title --- */
 h1 {
-  font-size: 2rem;
-  margin: 5px 0 10px 0;
+  font-size: 1.8rem; /* Smaller base font size */
+  margin: 0 0 8px 0; /* Minimal margin */
   color: #6e5aa0;
   text-shadow: 1px 1px 2px #fff;
-  flex-shrink: 0; /* Prevent title from shrinking */
 }
 
-/* Buttons styling */
+/* --- Smaller Buttons & Inputs --- */
+.buttons-group {
+  display: flex;
+  justify-content: center;
+}
+
 button {
   background-color: #3A7DFF;
   color: #ffffff;
   border: none;
-  padding: 10px 15px;
-  margin: 3px;
-  border-radius: 12px;
-  font-size: 0.9rem; /* Slightly smaller font */
+  padding: 8px 14px; /* Reduced padding */
+  margin: 2px;
+  border-radius: 10px;
+  font-size: 0.8rem; /* Smaller font */
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
-  flex-shrink: 0;
 }
 
 button:hover {
@@ -77,40 +76,42 @@ button:hover {
   transform: scale(1.05);
 }
 
+#scoreForm {
+  margin: 5px 0;
+}
+
 #scoreForm button {
   background-color: #E06377;
 }
+
 #scoreForm button:hover {
   background-color: #F28394;
 }
 
 input[type="text"] {
   padding: 8px;
-  width: 80%;
+  width: 70%;
   margin: 5px auto;
   border: 1px solid #c9bee5;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
   text-align: center;
-  flex-shrink: 0;
 }
 
-/* Game board grid */
+/* --- Compact Game Board --- */
 #game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px; /* Reduced gap */
-  margin: 10px 0;
-  /* The game grid will not grow or shrink, maintaining its aspect ratio */
+  gap: 6px; /* Reduced gap */
+  margin: 8px 0;
 }
 
-/* Individual tile styling */
 .tile {
   width: 100%;
   padding-top: 100%;
-  border-radius: 8px; /* Slightly smaller radius */
+  border-radius: 6px;
   position: relative;
-  font-size: 1.4rem;
+  font-size: 1.3rem; /* Scaled down font size */
   font-weight: bold;
   color: #fff;
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
@@ -125,7 +126,7 @@ input[type="text"] {
   transform: translate(-50%, -50%);
 }
 
-/* DYNAMIC TILE COLOR PALETTE */
+/* --- Tile Colors (Unchanged) --- */
 .tile-0 { background-color: #cdc1e4; }
 .tile-2 { background-color: #a9d6e5; color: #333; }
 .tile-4 { background-color: #89c2d9; color: #333; }
@@ -147,63 +148,52 @@ input[type="text"] {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Leaderboard styling */
+/* --- Leaderboard & Footer --- */
 #leaderboard {
-  margin-top: 10px;
+  margin-top: 8px;
   text-align: left;
   background: rgba(234, 230, 248, 0.6);
-  padding: 10px;
-  border-radius: 10px;
-  /* Let it take available space but not push other elements */
-  flex-grow: 1;
-  min-height: 0; /* Important for flexbox scrolling */
+  padding: 8px;
+  border-radius: 8px;
   overflow-y: auto;
+  /* Let it take a small amount of space */
+  max-height: 100px;
 }
 
 .warning {
   color: #a02e2e;
-  font-size: 0.75rem;
-  margin: 8px 0 5px 0;
-  flex-shrink: 0;
+  font-size: 0.7rem; /* Very small */
+  margin: 5px 0 0 0;
 }
 
-/* The footer will not grow and will be pushed to the bottom */
 .footer {
+  width: 100%; /* Make footer span the width */
+  max-width: 480px; /* But not wider than the container */
+  margin: 8px auto 0 auto;
   text-align: center;
-  font-size: 0.75rem;
-  padding: 5px 0;
-  margin-top: 10px;
+  font-size: 0.7rem;
+  padding-top: 5px;
   color: #6e5aa0;
-  background-color: rgba(255, 255, 255, 0.9);
   border-top: 1px solid #dcd4ed;
-  flex-shrink: 0; /* Prevents the footer from shrinking */
-  width: 100%;
 }
 
 .footer a {
   color: #6e5aa0;
   text-decoration: none;
-  margin: 0 5px;
+  margin: 0 3px;
 }
 
 .footer a:hover {
   text-decoration: underline;
 }
 
-/* Media query for very short screens to prevent overflow */
-@media (max-height: 740px) {
-  h1 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-  }
-  button {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-  }
-  .tile {
-    font-size: 1.2rem;
-  }
-  #game {
-    gap: 5px;
-  }
+/* * Media Query for slightly larger screens (Desktop) 
+ * This makes fonts and elements bigger when there is enough space.
+*/
+@media (min-width: 500px) and (min-height: 700px) {
+  h1 { font-size: 2.2rem; }
+  button { padding: 12px 20px; font-size: 1rem; }
+  input[type="text"] { padding: 10px; font-size: 1rem; }
+  .tile { font-size: 1.5rem; }
+  #game { gap: 10px; }
 }
