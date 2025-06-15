@@ -50,7 +50,7 @@ async function submitScore(e) {
   if (!contract) return alert("اول کیف پول رو وصل کن");
 
   const name = document.getElementById("playerName").value.trim();
-  if (!name) return alert("نام بازیکن را وارد کن");
+  if (!name) return alert("نام بازیکن وارد کن");
 
   try {
     const tx = await contract.gm(name, currentScore);
@@ -102,7 +102,7 @@ function toggleLeaderboard() {
   }
 }
 
-// ✅ تابع جدید برای آپدیت امتیاز
+// Score Section
 function updateScoreDisplay() {
   const scoreEl = document.getElementById("score-display");
   if (scoreEl) {
@@ -121,7 +121,7 @@ function initGame() {
   currentScore = 0;
   gameOver = false;
   updateGameBoard();
-  updateScoreDisplay(); // ✅ آپدیت امتیاز در شروع بازی
+  updateScoreDisplay();
 }
 
 function resetGame() {
@@ -189,7 +189,7 @@ function move(direction) {
     for (let i = 0; i < arr.length - 1; i++) {
       if (arr[i] === arr[i + 1]) {
         arr[i] *= 2;
-        currentScore += arr[i]; // امتیاز اینجا اضافه می‌شود
+        currentScore += arr[i]; 
         arr[i + 1] = 0;
       }
     }
@@ -222,10 +222,10 @@ function move(direction) {
   if (JSON.stringify(grid) !== JSON.stringify(clone)) {
     addRandomTile();
     updateGameBoard();
-    updateScoreDisplay(); // ✅ آپدیت امتیاز بعد از هر حرکت
+    updateScoreDisplay();
     if (!canMove()) {
       gameOver = true;
-      alert("💀 Game Over! امتیازت رو ثبت کن.");
+      alert("💀Game Over شدی! اما میتونی امتیازتو ثبت کنی.");
     }
   }
 }
