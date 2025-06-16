@@ -228,16 +228,42 @@ input[type="text"] {
 #leaderboard {
   margin-top: 8px;
   text-align: left;
-  background: rgba(234, 230, 248, 0.6);
-  padding: 8px;
-  border-radius: 8px;
+  background: rgba(234, 230, 248, 0.85); /* کمی شفاف‌تر و روشن‌تر */
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(111, 82, 255, 0.15); /* سایه ملایم بنفش */
+  max-height: 140px; /* ارتفاع بیشتر برای اسکرول بهتر */
   overflow-y: auto;
-  max-height: 100px;
+  font-family: 'Changa', sans-serif;
+  font-size: 0.9rem;
+  color: #3a2f58;
+  user-select: none;
 }
-#leaderboard p {
-  margin: 2px 0;
-  line-height: 1.3;
+
+#leaderboard h3 {
+  margin: 0 0 6px 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #6e5aa0; /* خط بنفش ملایم */
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #5b3e96;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
+
+#leaderboard div {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(110, 90, 160, 0.15);
+}
+
+#leaderboard div:last-child {
+  border-bottom: none;
+}
+
+#leaderboard strong {
+  color: #6e5aa0;
+}
+
 .footer {
   text-align: center;
   font-size: 0.7rem;
