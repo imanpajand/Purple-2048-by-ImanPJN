@@ -110,6 +110,18 @@ h1 {
   background-image: linear-gradient(144deg, #ff416c, #ff4b2b 50%, #ff416c);
 }
 
+/* --- Small & Unified Font Size and Button Dimensions for Connect, GM, Submit, and Score Display --- */
+.button-63.connect-wallet,
+.button-63.gm-button,
+.button-63.submit-score,
+#score-display {
+  font-size: 0.85rem;    /* اندازه فونت کوچیک‌تر و یکسان */
+  min-width: 120px;      /* عرض پایه مشترک */
+  height: 36px;          /* ارتفاع یکسان کمتر */
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
 /* --- Score Display --- */
 #score-display {
   background-color: rgba(234, 229, 250, 0.8);
