@@ -79,7 +79,7 @@ async function loadLeaderboard() {
   const fromBlock = latestBlock - 10000 > 0 ? latestBlock - 10000 : 0;
 
   // فقط رویدادهای GM از محدوده بلاک مورد نظر رو بگیر
-  const logs = await readContract.queryFilter("GM", fromBlock, latestBlock);
+  const logs = await readContract.queryFilter("GM");
 
   // ساخت آبجکت لیدربرد با نام و بهترین امتیاز
   const leaderboard = {};
