@@ -8,7 +8,7 @@ html, body {
   position: relative;
 }
 
-/* --- Background as Pseudo Element to Prevent Refresh Flicker --- */
+/* --- Background --- */
 body::before {
   content: "";
   position: fixed;
@@ -52,14 +52,14 @@ h1 {
   text-shadow: 1px 1px 2px #fff;
 }
 
-/* Main wrapper for top section */
+/* Wrapper Top section */
 .top-buttons-wrapper {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
   width: 100%;
-  flex-wrap: wrap; /* برای ریسپانسیو شدن در موبایل */
+  flex-wrap: wrap;
 }
 
 .button-group-left {
@@ -68,7 +68,7 @@ h1 {
   gap: 8px;
 }
 
-/* --- Button Style (Base) --- */
+/* --- Button Style --- */
 .button-63 {
   align-items: center;
   border: 0;
@@ -82,7 +82,7 @@ h1 {
   justify-content: center;
   line-height: 1em;
   min-width: 140px;
-  height: 40px;            /* ✅ ارتفاع یکسان برای همه دکمه‌ها */
+  height: 40px;   
   padding: 0 20px;
   text-decoration: none;
   user-select: none;
@@ -104,20 +104,20 @@ h1 {
 }
 .button-63.gm-button {
   background-image: linear-gradient(144deg, #a8ff78, #78ffd6 50%, #a8ff78);
-  min-width: 110px; /* ✅ طول کمتر برای GM */
+  min-width: 110px;
 }
 .button-63.submit-score {
   background-image: linear-gradient(144deg, #ff416c, #ff4b2b 50%, #ff416c);
 }
 
-/* --- Small & Unified Font Size and Button Dimensions for Connect, GM, Submit, and Score Display --- */
+/* --- GM, Submit, and Score Display --- */
 .button-63.connect-wallet,
 .button-63.gm-button,
 .button-63.submit-score,
 #score-display {
-  font-size: 0.85rem;    /* اندازه فونت کوچیک‌تر و یکسان */
-  min-width: 120px;      /* عرض پایه مشترک */
-  height: 36px;          /* ارتفاع یکسان کمتر */
+  font-size: 0.85rem;    
+  min-width: 120px;      
+  height: 36px;         
   padding: 0 16px;
   box-sizing: border-box;
 }
@@ -133,11 +133,11 @@ h1 {
   border: 1px solid #c9bee5;
   display: flex;
   align-items: center;
-  height: 30px; /* ✅ ارتفاع یکسان با دکمه‌ها */
+  height: 30px; 
 }
 
 
-/* --- Bottom Buttons & Form --- */
+/* --- Score Form --- */
 #scoreForm {
   display: flex;
   flex-direction: column;
@@ -190,7 +190,7 @@ input[type="text"] {
   transform: translate(-50%, -50%);
 }
 
-/* --- New & Merge Animation --- */
+/* --- Animation --- */
 .tile.new {
   animation: tile-pop 200ms ease-in;
 }
@@ -208,7 +208,7 @@ input[type="text"] {
   100% { transform: scale(1); }
 }
 
-/* --- Tile Colors --- */
+
 .tile-0    { background-color: #e9e4f5; }
 .tile-2    { background-color: #d1b3ff; color: #333; }
 .tile-4    { background-color: #b980f5; color: #333; }
