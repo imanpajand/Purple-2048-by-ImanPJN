@@ -5,12 +5,21 @@ html, body {
   padding: 0;
   overflow: hidden;
   -webkit-text-size-adjust: 100%;
+  position: relative;
 }
 
-/* --- Flexbox Layout --- */
-body {
-  background: url("assets/bg.jpg") no-repeat center center fixed;
+/* --- Background as Pseudo Element to Prevent Refresh Flicker --- */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: url("assets/bg.jpg") no-repeat center center;
   background-size: cover;
+  z-index: -1;
+}
+
+body {
   font-family: 'Changa', sans-serif;
   color: #3a2f58;
   box-sizing: border-box;
@@ -48,17 +57,18 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
+  flex-wrap: wrap; /* برای ریسپانسیو شدن در موبایل */
 }
 
-/* Wrapper for the left-aligned buttons */
 .button-group-left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* --- Shared Button Style --- */
+/* --- Button Style (Base) --- */
 .button-63 {
   align-items: center;
   border: 0;
@@ -71,8 +81,9 @@ h1 {
   font-size: 20px;
   justify-content: center;
   line-height: 1em;
-  min-width: 160px;
-  padding: 18px 24px;
+  min-width: 140px;
+  height: 50px;            /* ✅ ارتفاع یکسان برای همه دکمه‌ها */
+  padding: 0 20px;
   text-decoration: none;
   user-select: none;
   -webkit-user-select: none;
@@ -88,39 +99,31 @@ h1 {
   transform: scale(1.05);
 }
 
-/* --- Button Variants --- */
 .button-63.connect-wallet {
   background-image: linear-gradient(144deg,#AF40FF, #5B42F3 50%,#00DDEB);
 }
-
 .button-63.gm-button {
-    min-width: 100px; /* ✅ عرض کمتر */
-  padding: 11px 18px; /* ✅ عرض و ارتفاع همسان */
-  font-size: 18px;
   background-image: linear-gradient(144deg, #a8ff78, #78ffd6 50%, #a8ff78);
+  min-width: 110px; /* ✅ طول کمتر برای GM */
 }
-
 .button-63.submit-score {
   background-image: linear-gradient(144deg, #ff416c, #ff4b2b 50%, #ff416c);
-}
-
-@media (min-width: 768px) {
-  .button-63 {
-    font-size: 24px;
-    min-width: 196px;
-  }
 }
 
 /* --- Score Display --- */
 #score-display {
   background-color: rgba(234, 229, 250, 0.8);
   color: #3a2f58;
-  padding: 8px 14px;
+  padding: 0 14px;
   border-radius: 10px;
   font-weight: bold;
   font-size: 0.9rem;
   border: 1px solid #c9bee5;
+  display: flex;
+  align-items: center;
+  height: 50px; /* ✅ ارتفاع یکسان با دکمه‌ها */
 }
+
 
 /* --- Bottom Buttons & Form --- */
 #scoreForm {
@@ -163,11 +166,10 @@ input[type="text"] {
   font-size: 1.3rem;
   font-weight: bold;
   color: #fff;
-  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-  animation: tile-creation-pop 0.3s ease, pulse 2s infinite;
   backdrop-filter: blur(4px);
   background: rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 .tile::after {
   content: attr(data-value);
@@ -175,15 +177,23 @@ input[type="text"] {
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
 }
-@keyframes tile-creation-pop {
-  0% { transform: scale(0.7); opacity: 0; }
-  80% { transform: scale(1.05); opacity: 1; }
+
+/* --- New & Merge Animation --- */
+.tile.new {
+  animation: tile-pop 200ms ease-in;
+}
+.tile.merge {
+  animation: tile-merge 200ms cubic-bezier(0, 0.2, 0, 1.5);
+}
+@keyframes tile-pop {
+  0%   { transform: scale(0.3); opacity: 0; }
+  80%  { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-@keyframes pulse {
-  0%   { box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
-  50%  { box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
-  100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+@keyframes tile-merge {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
 /* --- Tile Colors --- */
@@ -227,7 +237,6 @@ input[type="text"] {
   text-decoration: underline;
 }
 
-/* --- Media Query for Larger Screens --- */
 @media (min-width: 500px) and (min-height: 700px) {
   h1 { font-size: 2.2rem; }
   .button-63, #score-display { padding: 12px 20px; font-size: 1rem; }
