@@ -1,3 +1,4 @@
+// ✅ نسخه کامل app.js با حفظ تمام ساختار اصلی، اضافه شدن انیمیشن‌ها (tile new + merge)
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
@@ -7,6 +8,7 @@ const ABI = [
 let provider, signer, contract;
 let currentScore = 0;
 let gameOver = false;
+let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 window.onload = () => {
   initGame();
@@ -14,7 +16,6 @@ window.onload = () => {
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
-  // We don't call connectWallet() on load anymore, user clicks the button.
 };
 
 async function connectWallet() {
@@ -66,7 +67,7 @@ async function submitScore(e) {
 }
 
 async function loadLeaderboard() {
-  if (!provider) { // If provider is not set, try to set it up for read-only
+  if (!provider) {
     provider = new ethers.BrowserProvider(window.ethereum);
   }
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
@@ -102,7 +103,6 @@ function toggleLeaderboard() {
   }
 }
 
-// Score Section
 function updateScoreDisplay() {
   const scoreEl = document.getElementById("score-display");
   if (scoreEl) {
@@ -111,11 +111,11 @@ function updateScoreDisplay() {
 }
 
 // ----------------- GAME LOGIC ------------------
-
 let grid = [];
 
 function initGame() {
   grid = Array.from({ length: 4 }, () => Array(4).fill(0));
+  tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
   addRandomTile();
   addRandomTile();
   currentScore = 0;
@@ -172,10 +172,11 @@ function updateGameBoard() {
   const gameDiv = document.getElementById("game");
   gameDiv.innerHTML = "";
 
-  grid.forEach((row) =>
-    row.forEach((val) => {
+  grid.forEach((row, r) =>
+    row.forEach((val, c) => {
       const tile = document.createElement("div");
-      tile.className = `tile tile-${val}`;
+      const isNew = val > 0 && !tileExistsPreviously[r][c];
+      tile.className = `tile tile-${val}${isNew ? ' new' : ''}`;
       tile.setAttribute("data-value", val > 0 ? val : "");
       gameDiv.appendChild(tile);
     })
@@ -184,13 +185,16 @@ function updateGameBoard() {
 
 function move(direction) {
   const clone = JSON.parse(JSON.stringify(grid));
-  const combine = (row) => {
+  const merged = Array.from({ length: 4 }, () => Array(4).fill(false));
+
+  const combine = (row, rIndex) => {
     let arr = row.filter(Boolean);
     for (let i = 0; i < arr.length - 1; i++) {
       if (arr[i] === arr[i + 1]) {
         arr[i] *= 2;
-        currentScore += arr[i]; 
+        currentScore += arr[i];
         arr[i + 1] = 0;
+        merged[rIndex][i] = true;
       }
     }
     return arr.filter(Boolean).concat(Array(4 - arr.filter(Boolean).length).fill(0));
@@ -200,28 +204,42 @@ function move(direction) {
     let row;
     switch (direction) {
       case "ArrowLeft":
-        grid[i] = combine(grid[i]);
+        grid[i] = combine(grid[i], i);
         break;
       case "ArrowRight":
         row = grid[i].slice().reverse();
-        grid[i] = combine(row).reverse();
+        grid[i] = combine(row, i).reverse();
         break;
       case "ArrowUp":
         row = grid.map(r => r[i]);
-        const colUp = combine(row);
+        const colUp = combine(row, i);
         grid.forEach((r, j) => (r[i] = colUp[j]));
         break;
       case "ArrowDown":
         row = grid.map(r => r[i]).reverse();
-        const colDown = combine(row).reverse();
+        const colDown = combine(row, i).reverse();
         grid.forEach((r, j) => (r[i] = colDown[j]));
         break;
     }
   }
 
   if (JSON.stringify(grid) !== JSON.stringify(clone)) {
+    tileExistsPreviously = clone.map(row => row.map(cell => cell > 0));
     addRandomTile();
     updateGameBoard();
+
+    // اضافه کردن کلاس merge برای انیمیشن ادغام کاشی‌ها
+    const tiles = document.querySelectorAll('.tile');
+    let index = 0;
+    grid.forEach((row, r) =>
+      row.forEach((val, c) => {
+        if (val !== 0 && merged[r][c]) {
+          tiles[index].classList.add('merge');
+        }
+        index++;
+      })
+    );
+
     updateScoreDisplay();
     if (!canMove()) {
       gameOver = true;
