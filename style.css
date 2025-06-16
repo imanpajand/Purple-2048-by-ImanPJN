@@ -234,6 +234,10 @@ input[type="text"] {
   overflow-y: auto;
   max-height: 100px;
 }
+#leaderboard p {
+  margin: 2px 0;
+  line-height: 1.3;
+}
 .footer {
   text-align: center;
   font-size: 0.7rem;
