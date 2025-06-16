@@ -228,11 +228,11 @@ input[type="text"] {
 #leaderboard {
   margin-top: 8px;
   text-align: left;
-  background: rgba(234, 230, 248, 0.85); /* کمی شفاف‌تر و روشن‌تر */
+  background: rgba(234, 230, 248, 0.85); 
   padding: 10px 14px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(111, 82, 255, 0.15); /* سایه ملایم بنفش */
-  max-height: 140px; /* ارتفاع بیشتر برای اسکرول بهتر */
+  box-shadow: 0 4px 12px rgba(111, 82, 255, 0.15); 
+  max-height: 140px;
   overflow-y: auto;
   font-family: 'Changa', sans-serif;
   font-size: 0.9rem;
@@ -241,9 +241,9 @@ input[type="text"] {
 }
 
 #leaderboard h3 {
-  margin: 0 0 6px 0;
+  margin-bottom: 2px; /* کمتر کردن فاصله زیر عنوان */
   padding-bottom: 4px;
-  border-bottom: 2px solid #6e5aa0; /* خط بنفش ملایم */
+  border-bottom: 2px solid #6e5aa0;
   font-size: 1.1rem;
   font-weight: 700;
   color: #5b3e96;
@@ -251,13 +251,11 @@ input[type="text"] {
   text-transform: uppercase;
 }
 
-#leaderboard div {
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(110, 90, 160, 0.15);
-}
-
-#leaderboard div:last-child {
-  border-bottom: none;
+#leaderboard div,
+#leaderboard p {
+  margin-top: 0;
+  padding-top: 2px;
+  margin-bottom: 4px;
 }
 
 #leaderboard strong {
