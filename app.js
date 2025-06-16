@@ -95,7 +95,7 @@ async function loadLeaderboard() {
     lbDiv.innerHTML += "<p>هنوز امتیازی ثبت نشده!</p>";
   } else {
     sorted.slice(0, 10).forEach(([name, score], i) => {
-      lbDiv.innerHTML += `<p>${i + 1}. <strong>${name}</strong>: ${score}</p>`;
+lbDiv.innerHTML += `<div>${i + 1}. <strong>${name}</strong>: ${score}</div>`;
     });
   }
 }
