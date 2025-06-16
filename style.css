@@ -82,7 +82,7 @@ h1 {
   justify-content: center;
   line-height: 1em;
   min-width: 140px;
-  height: 40px;            /* ✅ ارتفاع یکسان برای همه دکمه‌ها */
+  height: 50px;            /* ✅ ارتفاع یکسان برای همه دکمه‌ها */
   padding: 0 20px;
   text-decoration: none;
   user-select: none;
