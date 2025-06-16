@@ -1,4 +1,4 @@
-// ✅ نسخه کامل app.js با حفظ تمام ساختار اصلی، اضافه شدن انیمیشن‌ها (tile new + merge)
+
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
@@ -72,16 +72,12 @@ async function loadLeaderboard() {
   }
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
-  // برای جلوگیری از ارور height of queried block exceeds the limit، 
-  // محدوده بلاک ها رو محدود می‌کنیم
-  // می‌تونیم از آخرین 10000 بلاک بررسی کنیم (یا هر عدد مناسب دیگه)
+
   const latestBlock = await provider.getBlockNumber();
   const fromBlock = latestBlock - 10000 > 0 ? latestBlock - 10000 : 0;
 
-  // فقط رویدادهای GM از محدوده بلاک مورد نظر رو بگیر
   const logs = await readContract.queryFilter("GM");
 
-  // ساخت آبجکت لیدربرد با نام و بهترین امتیاز
   const leaderboard = {};
   logs.forEach(log => {
     const name = log.args.name;
@@ -91,10 +87,8 @@ async function loadLeaderboard() {
     }
   });
 
-  // مرتب سازی بر اساس بیشترین امتیاز
   const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
 
-  // نمایش لیدربرد در صفحه
   const lbDiv = document.getElementById("leaderboard");
   lbDiv.innerHTML = "<h3>🏆 Leaderboard</h3>";
   if (sorted.length === 0) {
@@ -245,7 +239,7 @@ function move(direction) {
     addRandomTile();
     updateGameBoard();
 
-    // اضافه کردن کلاس merge برای انیمیشن ادغام کاشی‌ها
+
     const tiles = document.querySelectorAll('.tile');
     let index = 0;
     grid.forEach((row, r) =>
