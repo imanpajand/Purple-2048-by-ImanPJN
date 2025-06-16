@@ -102,16 +102,8 @@ async function loadLeaderboard() {
 
 
 function toggleLeaderboard() {
-  const lb = document.getElementById("leaderboard");
-  const btn = document.getElementById("leaderboardToggle");
-  if (lb.style.display === "none") {
-    loadLeaderboard();
-    lb.style.display = "block";
-    btn.innerText = "Hide Leaderboard";
-  } else {
-    lb.style.display = "none";
-    btn.innerText = "Show Leaderboard";
-  }
+  const leaderboard = document.getElementById("leaderboard");
+  leaderboard.classList.toggle("show");
 }
 
 function updateScoreDisplay() {
