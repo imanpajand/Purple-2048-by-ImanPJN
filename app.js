@@ -38,7 +38,7 @@ async function sendGM() {
   try {
     const tx = await contract.gm("Gm to Iman", 0);
     await tx.wait();
-    alert("✅ GM ثبت شد!");
+    alert("✅GM به خودت عزیزم");
     loadLeaderboard();
   } catch (err) {
     console.error("GM Error:", err);
@@ -56,7 +56,7 @@ async function submitScore(e) {
   try {
     const tx = await contract.gm(name, currentScore);
     await tx.wait();
-    alert("🎯 امتیاز ثبت شد!");
+    alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
@@ -71,8 +71,17 @@ async function loadLeaderboard() {
     provider = new ethers.BrowserProvider(window.ethereum);
   }
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-  const logs = await readContract.queryFilter("GM");
 
+  // برای جلوگیری از ارور height of queried block exceeds the limit، 
+  // محدوده بلاک ها رو محدود می‌کنیم
+  // می‌تونیم از آخرین 10000 بلاک بررسی کنیم (یا هر عدد مناسب دیگه)
+  const latestBlock = await provider.getBlockNumber();
+  const fromBlock = latestBlock - 10000 > 0 ? latestBlock - 10000 : 0;
+
+  // فقط رویدادهای GM از محدوده بلاک مورد نظر رو بگیر
+  const logs = await readContract.queryFilter("GM", fromBlock, latestBlock);
+
+  // ساخت آبجکت لیدربرد با نام و بهترین امتیاز
   const leaderboard = {};
   logs.forEach(log => {
     const name = log.args.name;
@@ -82,13 +91,21 @@ async function loadLeaderboard() {
     }
   });
 
+  // مرتب سازی بر اساس بیشترین امتیاز
   const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
+
+  // نمایش لیدربرد در صفحه
   const lbDiv = document.getElementById("leaderboard");
   lbDiv.innerHTML = "<h3>🏆 Leaderboard</h3>";
-  sorted.slice(0, 10).forEach(([name, score], i) => {
-    lbDiv.innerHTML += `<p>${i + 1}. <strong>${name}</strong>: ${score}</p>`;
-  });
+  if (sorted.length === 0) {
+    lbDiv.innerHTML += "<p>هنوز امتیازی ثبت نشده!</p>";
+  } else {
+    sorted.slice(0, 10).forEach(([name, score], i) => {
+      lbDiv.innerHTML += `<p>${i + 1}. <strong>${name}</strong>: ${score}</p>`;
+    });
+  }
 }
+
 
 function toggleLeaderboard() {
   const lb = document.getElementById("leaderboard");
@@ -243,7 +260,7 @@ function move(direction) {
     updateScoreDisplay();
     if (!canMove()) {
       gameOver = true;
-      alert("💀Game Over شدی! اما میتونی امتیازتو ثبت کنی.");
+      alert("💀 متاسفانه Game Over شدی! اما میتونی امتیازتو ثبت کنی.");
     }
   }
 }
