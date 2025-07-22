@@ -4,12 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Purple 2048 by ImanPJN</title>
+
+    <!-- Farcaster Embed Meta Tags -->
+    <meta name="fc:miniapp" content='{
+      "version":"1",
+      "imageUrl":"https://purple2048.vercel.app/assets/favicon.ico",
+      "button":{
+        "title":"🎮 Play Now!",
+        "action":{
+          "type":"launch_miniapp",
+          "name":"Purple 2048",
+          "url":"https://purple2048.vercel.app",
+          "splashImageUrl":"https://purple2048.vercel.app/assets/favicon.ico",
+          "splashBackgroundColor":"#ffffff"
+        }
+      }
+    }' />
+    <meta name="fc:frame" content='{
+      "version":"1",
+      "imageUrl":"https://purple2048.vercel.app/assets/favicon.ico",
+      "button":{
+        "title":"🎮 Play Now!",
+        "action":{
+          "type":"launch_frame",
+          "name":"Purple 2048",
+          "url":"https://purple2048.vercel.app",
+          "splashImageUrl":"https://purple2048.vercel.app/assets/favicon.ico",
+          "splashBackgroundColor":"#ffffff"
+        }
+      }
+    }' />
+
+    <!-- Style & Fonts -->
     <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;700&display=swap" rel="stylesheet" />
+
+    <!-- WalletConnect -->
+    <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+
+    <!-- 🚀 Farcaster MiniApp SDK -->
+    <script type="module">
+      import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
+      window.addEventListener("load", async () => {
+        await sdk.actions.ready();
+      });
+    </script>
   </head>
+
   <body>
     <div class="container">
       <h1>Purple 2048</h1>
@@ -21,7 +65,7 @@
         </div>
         <div id="score-display">Score: 0</div>
       </div>
-      
+
       <div id="game"></div>
 
       <form id="scoreForm">
@@ -31,7 +75,7 @@
           <button class="button-63 connect-wallet" type="button" id="leaderboardToggle">Show Leaderboard</button>
         </div>
       </form>
-      
+
       <div id="leaderboard" style="display: none;"></div>
 
       <footer class="footer">
@@ -49,6 +93,6 @@
     </audio>
 
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.3/dist/ethers.umd.min.js"></script>
-	  <script src="app.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
