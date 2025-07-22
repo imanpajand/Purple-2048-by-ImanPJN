@@ -3,7 +3,7 @@
   "name": "Purple 2048",
   "description": "Purple 2048 game on Base by ImanPJN",
   "url": "https://purple2048.vercel.app/",
-  "icon": "https://purple2048.vercel.app/favicon.ico",
+  "icon": "https://purple2048.vercel.app/favicon.jpg",
   "entrypoint": "/",
   "tagline": "Fun and addictive 2048 game on-chain 🎮",
   "version": "1.0.0",
