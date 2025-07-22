@@ -1,4 +1,3 @@
-
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
@@ -19,22 +18,67 @@ window.onload = () => {
 };
 
 async function connectWallet() {
-  if (window.ethereum) {
-    provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
+  try {
+    if (window.ethereum && window.ethereum.isMetaMask) {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+      if (chainId === "0x2105") {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+        const address = await signer.getAddress();
+        document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+        return;
+      }
+    }
+
+    if (window.ethereum) {
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x2105" }],
+        });
+        return connectWallet();
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x2105",
+              chainName: "Base Mainnet",
+              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+              rpcUrls: ["https://mainnet.base.org"],
+              blockExplorerUrls: ["https://basescan.org"],
+            }],
+          });
+          return connectWallet();
+        }
+      }
+    }
+
+    const walletConnectProvider = new WalletConnectProvider.default({
+      rpc: { 8453: "https://mainnet.base.org" },
+      chainId: 8453
+    });
+
+    await walletConnectProvider.enable();
+    provider = new ethers.BrowserProvider(walletConnectProvider);
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
     const address = await signer.getAddress();
     document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-  } else {
-    alert("🦊 لطفاً متامسک یا Rabby رو نصب کن.");
+
+  } catch (err) {
+    console.error("Connect Error:", err);
+    alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
 
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
-
   try {
     const tx = await contract.gm("Gm to Iman", 0);
     await tx.wait();
@@ -49,10 +93,8 @@ async function sendGM() {
 async function submitScore(e) {
   e.preventDefault();
   if (!contract) return alert("اول کیف پول رو وصل کن");
-
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("نام بازیکن وارد کن");
-
   try {
     const tx = await contract.gm(name, currentScore);
     await tx.wait();
@@ -71,13 +113,8 @@ async function loadLeaderboard() {
     provider = new ethers.BrowserProvider(window.ethereum);
   }
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-
-
   const latestBlock = await provider.getBlockNumber();
-  const fromBlock = latestBlock - 10000 > 0 ? latestBlock - 10000 : 0;
-
   const logs = await readContract.queryFilter("GM");
-
   const leaderboard = {};
   logs.forEach(log => {
     const name = log.args.name;
@@ -86,20 +123,17 @@ async function loadLeaderboard() {
       leaderboard[name] = score;
     }
   });
-
   const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
-
   const lbDiv = document.getElementById("leaderboard");
   lbDiv.innerHTML = "<h3>🏆 Leaderboard</h3>";
   if (sorted.length === 0) {
     lbDiv.innerHTML += "<p>هنوز امتیازی ثبت نشده!</p>";
   } else {
     sorted.slice(0, 10).forEach(([name, score], i) => {
-lbDiv.innerHTML += `<div>${i + 1}. <strong>${name}</strong>: ${score}</div>`;
+      lbDiv.innerHTML += `<div>${i + 1}. <strong>${name}</strong>: ${score}</div>`;
     });
   }
 }
-
 
 function toggleLeaderboard() {
   const lb = document.getElementById("leaderboard");
@@ -147,18 +181,15 @@ function setupControls() {
       move(e.key);
     }
   };
-
   let startX, startY;
   document.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
   });
-
   document.addEventListener("touchend", (e) => {
     if (gameOver) return;
     const dx = e.changedTouches[0].clientX - startX;
     const dy = e.changedTouches[0].clientY - startY;
-
     if (Math.abs(dx) > Math.abs(dy)) {
       move(dx > 0 ? "ArrowRight" : "ArrowLeft");
     } else {
@@ -182,7 +213,6 @@ function addRandomTile() {
 function updateGameBoard() {
   const gameDiv = document.getElementById("game");
   gameDiv.innerHTML = "";
-
   grid.forEach((row, r) =>
     row.forEach((val, c) => {
       const tile = document.createElement("div");
@@ -197,7 +227,6 @@ function updateGameBoard() {
 function move(direction) {
   const clone = JSON.parse(JSON.stringify(grid));
   const merged = Array.from({ length: 4 }, () => Array(4).fill(false));
-
   const combine = (row, rIndex) => {
     let arr = row.filter(Boolean);
     for (let i = 0; i < arr.length - 1; i++) {
@@ -210,7 +239,6 @@ function move(direction) {
     }
     return arr.filter(Boolean).concat(Array(4 - arr.filter(Boolean).length).fill(0));
   };
-
   for (let i = 0; i < 4; i++) {
     let row;
     switch (direction) {
@@ -233,13 +261,10 @@ function move(direction) {
         break;
     }
   }
-
   if (JSON.stringify(grid) !== JSON.stringify(clone)) {
     tileExistsPreviously = clone.map(row => row.map(cell => cell > 0));
     addRandomTile();
     updateGameBoard();
-
-
     const tiles = document.querySelectorAll('.tile');
     let index = 0;
     grid.forEach((row, r) =>
@@ -250,7 +275,6 @@ function move(direction) {
         index++;
       })
     );
-
     updateScoreDisplay();
     if (!canMove()) {
       gameOver = true;
