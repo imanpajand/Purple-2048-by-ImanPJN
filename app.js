@@ -1,3 +1,14 @@
+import { createConfig, http } from 'https://esm.sh/wagmi';
+import { WagmiProvider, getDefaultConfig } from 'https://esm.sh/wagmi';
+import { base } from 'https://esm.sh/wagmi/chains';
+import { farcasterFrame } from 'https://esm.sh/@farcaster/frame-wagmi-connector';
+
+const config = createConfig({
+  chains: [base],
+  transports: { [base.id]: http() },
+  connectors: [farcasterFrame()],
+});
+
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
@@ -19,55 +30,59 @@ window.onload = () => {
 
 async function connectWallet() {
   try {
-    if (window.ethereum && window.ethereum.isMetaMask) {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-
-      if (chainId === "0x2105") {
-        provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = await provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
-        const address = await signer.getAddress();
-        document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-        return;
-      }
+    // 1. Try Farcaster Smart Wallet (Base App)
+    if (window.ethereum && window.ethereum.isFrame) {
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const address = await signer.getAddress();
+      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+      return;
     }
 
+    // 2. Try Base-compatible wallets (MetaMask/Rabby)
     if (window.ethereum) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x2105" }],
-        });
-        return connectWallet();
-      } catch (switchError) {
-        if (switchError.code === 4902) {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      if (chainId !== "0x2105") {
+        try {
           await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x2105",
-              chainName: "Base Mainnet",
-              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-              rpcUrls: ["https://mainnet.base.org"],
-              blockExplorerUrls: ["https://basescan.org"],
-            }],
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x2105" }],
           });
-          return connectWallet();
+        } catch (switchError) {
+          if (switchError.code === 4902) {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: "0x2105",
+                chainName: "Base Mainnet",
+                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                rpcUrls: ["https://mainnet.base.org"],
+                blockExplorerUrls: ["https://basescan.org"],
+              }],
+            });
+          }
         }
       }
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const address = await signer.getAddress();
+      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+      return;
     }
 
+    // 3. Fallback to WalletConnect
     const walletConnectProvider = new WalletConnectProvider.default({
       rpc: { 8453: "https://mainnet.base.org" },
       chainId: 8453
     });
-
     await walletConnectProvider.enable();
     provider = new ethers.BrowserProvider(walletConnectProvider);
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
     const address = await signer.getAddress();
     document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
@@ -76,6 +91,7 @@ async function connectWallet() {
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
+
 
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
