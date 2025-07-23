@@ -31,7 +31,7 @@
     "heroImageUrl": "https://purple2048.vercel.app/assets/favicon.jpg",
     "ogImageUrl": "https://purple2048.vercel.app/assets/favicon.jpg",
     "ogDescription": "Play 2048 on base, save your score on-chain on top the leaderboard!",
-    "castShareUrl": "https://farcaster.xyz/~/compose?text=Play+fun+and+addictive+%232048+game+on+Base+and+save+your+score+on-chain+on+top+the+leaderboard!+%F0%9F%94%B5+%F0%9F%8E%AE%0APurple+2048+%23MiniApp+by+%40imaan+%F0%9F%92%9C+%0Ahttps%3A%2F%2Fpurple2048.vercel.app",
+    "castShareUrl": "https://purple2048.vercel.app/api/share",
     "addToHomeScreenAction": {
       "type": "post_redirect",
       "name": "افزودن به Mini Apps",
