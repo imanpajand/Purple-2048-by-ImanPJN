@@ -201,6 +201,7 @@ function resetGame() {
 }
 
 function setupControls() {
+  // بخش مربوط به کیبورد بدون تغییر باقی می‌ماند
   window.onkeydown = (e) => {
     if (gameOver) return;
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
@@ -208,12 +209,25 @@ function setupControls() {
       move(e.key);
     }
   };
+
+  // --- تغییرات در بخش لمسی ---
+  const gameBoard = document.getElementById("game"); // رویدادها را به خود بورد بازی متصل می‌کنیم
   let startX, startY;
-  document.addEventListener("touchstart", (e) => {
+
+  // برای اینکه preventDefault کار کند، گزینه passive باید false باشد
+  const touchOptions = { passive: false };
+
+  gameBoard.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-  });
-  document.addEventListener("touchend", (e) => {
+  }, touchOptions);
+
+  gameBoard.addEventListener("touchmove", (e) => {
+    // این خط کلیدی است: از اسکرول یا ناوبری مرورگر هنگام حرکت انگشت جلوگیری می‌کند
+    e.preventDefault();
+  }, touchOptions);
+
+  gameBoard.addEventListener("touchend", (e) => {
     if (gameOver) return;
     const dx = e.changedTouches[0].clientX - startX;
     const dy = e.changedTouches[0].clientY - startY;
