@@ -11,102 +11,90 @@ let currentScore = 0;
 let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
-window.onload = () => {
+window.onload = async () => {
+  if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === 'function') {
+    await window.sdk.actions.ready();
+  }
   initGame();
   setupControls();
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
-  loadWalletModules();
 };
 
-async function loadWalletModules() {
+async function connectWallet() {
   try {
-    const [wagmi, chains, mini, WalletConnectProvider] = await Promise.all([
-      import('https://esm.sh/wagmi'),
-      import('https://esm.sh/wagmi/chains'),
-      import('https://esm.sh/@farcaster/miniapp-wagmi-connector'),
-      import('https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js')
-    ]);
-
-    window.connectWallet = async function () {
-      try {
-        if (window.ethereum && window.ethereum.isFrame) {
-          provider = new ethers.BrowserProvider(window.ethereum);
-          await provider.send("eth_requestAccounts", []);
-          signer = await provider.getSigner();
-          contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-          const address = await signer.getAddress();
-          document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-          return;
-        }
-
-        const miniProvider = await mini.farcasterMiniApp({ rpcUrl: "https://mainnet.base.org" });
-        if (miniProvider && miniProvider.request) {
-          provider = new ethers.BrowserProvider(miniProvider);
-          signer = await provider.getSigner();
-          contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-          const address = await signer.getAddress();
-          document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-          return;
-        }
-
-        if (window.ethereum) {
-          const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-          if (chainId !== "0x2105") {
-            try {
-              await window.ethereum.request({
-                method: "wallet_switchEthereumChain",
-                params: [{ chainId: "0x2105" }],
-              });
-              return connectWallet();
-            } catch (switchError) {
-              if (switchError.code === 4902) {
-                await window.ethereum.request({
-                  method: "wallet_addEthereumChain",
-                  params: [{
-                    chainId: "0x2105",
-                    chainName: "Base Mainnet",
-                    nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-                    rpcUrls: ["https://mainnet.base.org"],
-                    blockExplorerUrls: ["https://basescan.org"],
-                  }],
-                });
-                return connectWallet();
-              }
-            }
-          }
-          provider = new ethers.BrowserProvider(window.ethereum);
-          await provider.send("eth_requestAccounts", []);
-          signer = await provider.getSigner();
-          contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-          const address = await signer.getAddress();
-          document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-          return;
-        }
-
-        const wc = new WalletConnectProvider.default({
-          rpc: { 8453: "https://mainnet.base.org" },
-          chainId: 8453
-        });
-        await wc.enable();
-        provider = new ethers.BrowserProvider(wc);
-        signer = await provider.getSigner();
-        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-        const address = await signer.getAddress();
-        document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-      } catch (err) {
-        console.error("Connect Error:", err);
-        alert("❌ اتصال کیف پول با خطا مواجه شد.");
-      }
+    if (window.ethereum && window.ethereum.isFrame) {
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const address = await signer.getAddress();
+      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+      return;
     }
 
-    // bind button now that wallet logic is ready
-    document.getElementById("connectWalletBtn").addEventListener("click", window.connectWallet);
+    if (window.farcaster && window.farcaster.ethereum) {
+      provider = new ethers.BrowserProvider(window.farcaster.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const address = await signer.getAddress();
+      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+      return;
+    }
+
+    if (window.ethereum) {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      if (chainId !== "0x2105") {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x2105" }],
+          });
+          return connectWallet();
+        } catch (switchError) {
+          if (switchError.code === 4902) {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: "0x2105",
+                chainName: "Base Mainnet",
+                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                rpcUrls: ["https://mainnet.base.org"],
+                blockExplorerUrls: ["https://basescan.org"],
+              }],
+            });
+            return connectWallet();
+          }
+        }
+      }
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const address = await signer.getAddress();
+      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+      return;
+    }
+
+    const wc = new WalletConnectProvider.default({
+      rpc: { 8453: "https://mainnet.base.org" },
+      chainId: 8453
+    });
+    await wc.enable();
+    provider = new ethers.BrowserProvider(wc);
+    signer = await provider.getSigner();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    const address = await signer.getAddress();
+    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
   } catch (err) {
-    console.error("Module load error:", err);
+    console.error("Connect Error:", err);
+    alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
+
+document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
 
 async function sendGM() {
