@@ -1,3 +1,4 @@
+// Purple 2048 by ImanPJN - app.js
 import { createConfig, http } from 'https://esm.sh/wagmi';
 import { WagmiProvider, getDefaultConfig } from 'https://esm.sh/wagmi';
 import { base } from 'https://esm.sh/wagmi/chains';
@@ -91,7 +92,6 @@ async function connectWallet() {
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
-
 
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
