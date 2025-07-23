@@ -21,12 +21,19 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
-  initGame();
   setupControls();
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
-  document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
+  document.getElementById("connectWalletBtn").addEventListener("click", async () => {
+    await connectWallet();
+    initGame();
+  });
+
+  if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
+    await connectWallet();
+    initGame();
+  }
 };
 
 async function connectWallet() {
@@ -58,15 +65,10 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-    // 4. WalletConnect (optional fallback)
-    if (!eth) {
-      const wc = new WalletConnectProvider.default({
-        rpc: { 8453: "https://mainnet.base.org" },
-        chainId: 8453
-      });
-      await wc.enable();
-      eth = wc;
-      console.log("🔗 WalletConnect fallback used");
+    // 4. Final fallback: generic injected (no WalletConnect)
+    if (!eth && window.ethereum) {
+      eth = window.ethereum;
+      console.log("🌐 Fallback to generic injected wallet");
     }
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
@@ -90,9 +92,14 @@ async function sendGM() {
     const tx = await contract.gm("Gm to Iman", 0, {
       gasLimit: 100000
     });
-    await tx.wait();
-    alert("✅GM به خودت عزیزم");
-    loadLeaderboard();
+    const receipt = await tx.wait();
+    if (receipt.status === 1) {
+      alert("✅GM به خودت عزیزم");
+      await new Promise(res => setTimeout(res, 2000));
+      loadLeaderboard();
+    } else {
+      alert("❌ تراکنش GM موفق نبود.");
+    }
   } catch (err) {
     console.error("GM Error:", err);
     alert("❌ ارسال GM با خطا مواجه شد.");
@@ -108,16 +115,22 @@ async function submitScore(e) {
     const tx = await contract.gm(name, currentScore, {
       gasLimit: 100000
     });
-    await tx.wait();
-    alert("🎯 امتیازت ثبت شد خوشگله!");
-    document.getElementById("playerName").value = "";
-    loadLeaderboard();
-    resetGame();
+    const receipt = await tx.wait();
+    if (receipt.status === 1) {
+      await new Promise(res => setTimeout(res, 2000));
+      alert("🎯 امتیازت ثبت شد خوشگله!");
+      document.getElementById("playerName").value = "";
+      loadLeaderboard();
+      resetGame();
+    } else {
+      alert("❌ تراکنش ثبت امتیاز موفق نبود.");
+    }
   } catch (err) {
     console.error("Submit Error:", err);
     alert("❌ ثبت امتیاز با خطا مواجه شد.");
   }
 }
+
 
 
 
