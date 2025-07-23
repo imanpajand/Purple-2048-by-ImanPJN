@@ -32,7 +32,18 @@ async function connectWallet() {
       return;
     }
 
-    // 2. Try MetaMask/Rabby
+    // 2. Try Farcaster mobile wallet
+    if (window.ethereum && window.ethereum.isFarcaster) {
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const address = await signer.getAddress();
+      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+      return;
+    }
+
+    // 3. Try MetaMask/Rabby
     if (window.ethereum) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       if (chainId !== "0x2105") {
@@ -67,7 +78,7 @@ async function connectWallet() {
       return;
     }
 
-    // 3. WalletConnect fallback
+    // 4. WalletConnect fallback
     const walletConnectProvider = new WalletConnectProvider.default({
       rpc: { 8453: "https://mainnet.base.org" },
       chainId: 8453
@@ -84,18 +95,7 @@ async function connectWallet() {
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
-async function sendGM() {
-  if (!contract) return alert("اول کیف پول رو وصل کن");
-  try {
-    const tx = await contract.gm("Gm to Iman", 0);
-    await tx.wait();
-    alert("✅GM به خودت عزیزم");
-    loadLeaderboard();
-  } catch (err) {
-    console.error("GM Error:", err);
-    alert("❌ ارسال GM با خطا مواجه شد.");
-  }
-}
+
 
 async function submitScore(e) {
   e.preventDefault();
