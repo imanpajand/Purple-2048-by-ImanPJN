@@ -12,19 +12,19 @@ let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 window.onload = async () => {
-  // ۱. بازی بلافاصله در شروع لود می‌شود
+  // Load
   initGame();
   setupControls();
 
-  // ۲. همه دکمه‌ها و رویدادها تنظیم می‌شوند
+  // Button
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
   
-  // دکمه اتصال کیف پول دیگر بازی را ری‌استارت نمی‌کند
+  // WalletConnect Button 
   document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
-  // ۳. آماده‌سازی SDK فارکستر (در صورت وجود)
+  // Farcaster SDK
   try {
     if (window.sdk?.actions?.ready) {
       await window.sdk.actions.ready();
@@ -34,7 +34,7 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
-  // ۴. تلاش برای اتصال خودکار کیف پول در پس‌زمینه (بازی را متوقف نمی‌کند)
+  // Retry Wallet
   if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
     await connectWallet();
   }
@@ -44,12 +44,12 @@ async function connectWallet() {
   try {
     let eth = null;
 
-    // 1. Base App Frame (Desktop)
+    // 1. Base App Frame
     if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Injected Wallet (MetaMask, Rabby, Phantom, etc.)
+    // 2. Injected Wallets like rabby
     else if (window.ethereum?.providers?.length) {
       const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
       if (injected) {
@@ -60,7 +60,7 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
-    // 3. Farcaster MiniApp Wallet (Mobile)
+    // 3. Farcaster MiniApp Mobile
     else if (window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
@@ -130,8 +130,6 @@ async function submitScore(e) {
     resetGame();
   }
 }
-
-// سایر توابع (loadLeaderboard، toggleLeaderboard، game logic...) بدون تغییر
 
 
 
