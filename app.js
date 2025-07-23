@@ -12,9 +12,15 @@ let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 window.onload = async () => {
-  if (window.sdk && window.sdk.actions && typeof window.sdk.actions.ready === 'function') {
-    await window.sdk.actions.ready();
+  try {
+    if (window.sdk?.actions?.ready) {
+      await window.sdk.actions.ready();
+      console.log("✅ sdk.actions.ready() called");
+    }
+  } catch (err) {
+    console.error("❌ sdk ready error:", err);
   }
+
   initGame();
   setupControls();
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
@@ -24,27 +30,20 @@ window.onload = async () => {
 
 async function connectWallet() {
   try {
+    let eth = null;
+
+    // 1. Base App via Farcaster Frame (Desktop)
     if (window.ethereum && window.ethereum.isFrame) {
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = await provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const address = await signer.getAddress();
-      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-      return;
+      eth = window.ethereum;
+      console.log("🟣 Base App Frame Wallet Detected");
     }
-
-    if (window.farcaster && window.farcaster.ethereum) {
-      provider = new ethers.BrowserProvider(window.farcaster.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = await provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const address = await signer.getAddress();
-      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-      return;
+    // 2. Farcaster Mobile Wallet
+    else if (window.farcaster && window.farcaster.ethereum) {
+      eth = window.farcaster.ethereum;
+      console.log("🟣 Farcaster Mobile Wallet Detected");
     }
-
-    if (window.ethereum) {
+    // 3. MetaMask / Rabby
+    else if (window.ethereum) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       if (chainId !== "0x2105") {
         try {
@@ -69,25 +68,29 @@ async function connectWallet() {
           }
         }
       }
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = await provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const address = await signer.getAddress();
-      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-      return;
+      eth = window.ethereum;
+      console.log("🦊 MetaMask or Rabby Wallet Detected");
+    }
+    // 4. WalletConnect fallback
+    else {
+      const wc = new WalletConnectProvider.default({
+        rpc: { 8453: "https://mainnet.base.org" },
+        chainId: 8453
+      });
+      await wc.enable();
+      eth = wc;
+      console.log("🔗 WalletConnect fallback used");
     }
 
-    const wc = new WalletConnectProvider.default({
-      rpc: { 8453: "https://mainnet.base.org" },
-      chainId: 8453
-    });
-    await wc.enable();
-    provider = new ethers.BrowserProvider(wc);
+    if (!eth) throw new Error("No wallet found");
+
+    provider = new ethers.BrowserProvider(eth);
+    await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     const address = await signer.getAddress();
     document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+
   } catch (err) {
     console.error("Connect Error:", err);
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
@@ -95,7 +98,6 @@ async function connectWallet() {
 }
 
 document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
-
 
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
