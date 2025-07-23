@@ -1,14 +1,4 @@
 // Purple 2048 by ImanPJN - app.js
-import { createConfig, http } from 'https://esm.sh/wagmi';
-import { WagmiProvider, getDefaultConfig } from 'https://esm.sh/wagmi';
-import { base } from 'https://esm.sh/wagmi/chains';
-import { farcasterFrame } from 'https://esm.sh/@farcaster/frame-wagmi-connector';
-
-const config = createConfig({
-  chains: [base],
-  transports: { [base.id]: http() },
-  connectors: [farcasterFrame()],
-});
 
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
@@ -31,7 +21,7 @@ window.onload = () => {
 
 async function connectWallet() {
   try {
-    // 1. Try Farcaster Smart Wallet (Base App)
+    // 1. Try Base App internal frame wallet
     if (window.ethereum && window.ethereum.isFrame) {
       provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
@@ -42,7 +32,7 @@ async function connectWallet() {
       return;
     }
 
-    // 2. Try Base-compatible wallets (MetaMask/Rabby)
+    // 2. Try MetaMask/Rabby
     if (window.ethereum) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       if (chainId !== "0x2105") {
@@ -51,6 +41,7 @@ async function connectWallet() {
             method: "wallet_switchEthereumChain",
             params: [{ chainId: "0x2105" }],
           });
+          return connectWallet();
         } catch (switchError) {
           if (switchError.code === 4902) {
             await window.ethereum.request({
@@ -63,6 +54,7 @@ async function connectWallet() {
                 blockExplorerUrls: ["https://basescan.org"],
               }],
             });
+            return connectWallet();
           }
         }
       }
@@ -75,7 +67,7 @@ async function connectWallet() {
       return;
     }
 
-    // 3. Fallback to WalletConnect
+    // 3. WalletConnect fallback
     const walletConnectProvider = new WalletConnectProvider.default({
       rpc: { 8453: "https://mainnet.base.org" },
       chainId: 8453
@@ -92,7 +84,6 @@ async function connectWallet() {
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
-
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
