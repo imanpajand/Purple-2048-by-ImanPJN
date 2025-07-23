@@ -38,16 +38,7 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Farcaster Mobile Wallet via sdk.wallet.getEthereumProvider()
-    else if (window.sdk?.wallet?.getEthereumProvider) {
-      try {
-        eth = await window.sdk.wallet.getEthereumProvider();
-        console.log("🟣 Farcaster Mobile Wallet via MiniApp SDK Detected");
-      } catch (err) {
-        console.warn("⚠️ Farcaster provider error:", err);
-      }
-    }
-    // 3. MetaMask / Rabby
+    // 2. Rabby or MetaMask
     else if (window.ethereum) {
       eth = window.ethereum;
       const chainId = await eth.request({ method: 'eth_chainId' });
@@ -76,8 +67,17 @@ async function connectWallet() {
       }
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
+    // 3. Farcaster Mobile Wallet via sdk.wallet.getEthereumProvider()
+    else if (window.sdk?.wallet?.getEthereumProvider) {
+      try {
+        eth = await window.sdk.wallet.getEthereumProvider();
+        console.log("🟣 Farcaster Mobile Wallet via MiniApp SDK Detected");
+      } catch (err) {
+        console.warn("⚠️ Farcaster provider error:", err);
+      }
+    }
     // 4. WalletConnect fallback
-    else {
+    if (!eth) {
       const wc = new WalletConnectProvider.default({
         rpc: { 8453: "https://mainnet.base.org" },
         chainId: 8453
