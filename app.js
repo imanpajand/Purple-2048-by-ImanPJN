@@ -87,7 +87,9 @@ async function connectWallet() {
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
-    const tx = await contract.gm("Gm to Iman", 0);
+    const tx = await contract.gm("Gm to Iman", 0, {
+      gasLimit: 100000
+    });
     await tx.wait();
     alert("✅GM به خودت عزیزم");
     loadLeaderboard();
@@ -103,7 +105,9 @@ async function submitScore(e) {
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("نام بازیکن وارد کن");
   try {
-    const tx = await contract.gm(name, currentScore);
+    const tx = await contract.gm(name, currentScore, {
+      gasLimit: 100000
+    });
     await tx.wait();
     alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
@@ -114,6 +118,7 @@ async function submitScore(e) {
     alert("❌ ثبت امتیاز با خطا مواجه شد.");
   }
 }
+
 
 
 async function loadLeaderboard() {
