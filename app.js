@@ -26,15 +26,26 @@ window.onload = async () => {
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
   document.getElementById("connectWalletBtn").addEventListener("click", async () => {
-    await connectWallet();
+    try {
+      await connectWallet();
+    } catch (e) {
+      // خطا رو هندل می‌کنیم ولی بازی ادامه پیدا می‌کنه
+      console.warn("Wallet connect failed:", e);
+    }
     initGame();
   });
 
-  if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
-    await connectWallet();
-    initGame();
+  // اینجا هم سعی می‌کنیم وصل شیم ولی اگر نشد، بازی راه میفته
+  try {
+    if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
+      await connectWallet();
+    }
+  } catch (e) {
+    console.warn("Auto wallet connect failed:", e);
   }
+  initGame();
 };
+
 
 async function connectWallet() {
   try {
@@ -79,10 +90,10 @@ async function connectWallet() {
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     const address = await signer.getAddress();
     document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-
   } catch (err) {
     console.error("Connect Error:", err);
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
+    throw err; // پرتاب خطا برای هندل در بالا
   }
 }
 
