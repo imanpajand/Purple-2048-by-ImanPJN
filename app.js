@@ -92,15 +92,21 @@ async function sendGM() {
     const tx = await contract.gm("Gm to Iman", 0, {
       gasLimit: 100000
     });
-    await tx.wait();
-    alert("✅GM به خودت عزیزم");
-    await new Promise(res => setTimeout(res, 2000));
-    loadLeaderboard();
+    const receipt = await tx.wait();
+    if (receipt?.status === 1) {
+      alert("✅GM به خودت عزیزم");
+      await new Promise(res => setTimeout(res, 2000));
+      loadLeaderboard();
+    } else {
+      alert("❌ تراکنش GM موفق نبود.");
+    }
   } catch (err) {
     console.error("GM Error:", err);
-    alert("✅GM به خودت عزیزم");
-    await new Promise(res => setTimeout(res, 2000));
-    loadLeaderboard();
+    if (err?.code === 4200 || err?.message?.includes("unsupported")) {
+      alert("❌ کیف پول از این نوع تراکنش پشتیبانی نمی‌کند.");
+    } else {
+      alert("❌ ارسال GM با خطا مواجه شد.");
+    }
   }
 }
 
@@ -113,19 +119,26 @@ async function submitScore(e) {
     const tx = await contract.gm(name, currentScore, {
       gasLimit: 100000
     });
-    await tx.wait();
-    alert("🎯 امتیازت ثبت شد خوشگله!");
-    document.getElementById("playerName").value = "";
-    loadLeaderboard();
-    resetGame();
+    const receipt = await tx.wait();
+    if (receipt?.status === 1) {
+      await new Promise(res => setTimeout(res, 2000));
+      alert("🎯 امتیازت ثبت شد خوشگله!");
+      document.getElementById("playerName").value = "";
+      loadLeaderboard();
+      resetGame();
+    } else {
+      alert("❌ تراکنش ثبت امتیاز موفق نبود.");
+    }
   } catch (err) {
     console.error("Submit Error:", err);
-    alert("🎯 امتیازت ثبت شد خوشگله!");
-    document.getElementById("playerName").value = "";
-    loadLeaderboard();
-    resetGame();
+    if (err?.code === 4200 || err?.message?.includes("unsupported")) {
+      alert("❌ کیف پول از این نوع تراکنش پشتیبانی نمی‌کند.");
+    } else {
+      alert("❌ ثبت امتیاز با خطا مواجه شد.");
+    }
   }
 }
+
 
 
 async function loadLeaderboard() {
