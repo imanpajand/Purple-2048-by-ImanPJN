@@ -78,7 +78,7 @@ async function connectWallet() {
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText = ✅ ${address.slice(0, 6)}...${address.slice(-4)};
+    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
   } catch (err) {
     console.error("Connect Error:", err);
@@ -153,7 +153,7 @@ async function loadLeaderboard() {
     lbDiv.innerHTML += "<p>هنوز امتیازی ثبت نشده!</p>";
   } else {
     sorted.slice(0, 10).forEach(([name, score], i) => {
-      lbDiv.innerHTML += <div>${i + 1}. <strong>${name}</strong>: ${score}</div>;
+      lbDiv.innerHTML += `<div>${i + 1}. <strong>${name}</strong>: ${score}</div>`;
     });
   }
 }
@@ -174,7 +174,7 @@ function toggleLeaderboard() {
 function updateScoreDisplay() {
   const scoreEl = document.getElementById("score-display");
   if (scoreEl) {
-    scoreEl.innerText = Score: ${currentScore};
+    scoreEl.innerText = `Score: ${currentScore}`;
   }
 }
 
@@ -240,7 +240,7 @@ function updateGameBoard() {
     row.forEach((val, c) => {
       const tile = document.createElement("div");
       const isNew = val > 0 && !tileExistsPreviously[r][c];
-      tile.className = tile tile-${val}${isNew ? ' new' : ''};
+      tile.className = `tile tile-${val}${isNew ? ' new' : ''}`;
       tile.setAttribute("data-value", val > 0 ? val : "");
       gameDiv.appendChild(tile);
     })
