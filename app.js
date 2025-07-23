@@ -1,5 +1,11 @@
 // Purple 2048 by ImanPJN - app.js
 
+import { createConfig, http } from 'https://esm.sh/wagmi';
+import { WagmiProvider } from 'https://esm.sh/wagmi';
+import { base } from 'https://esm.sh/wagmi/chains';
+import { farcasterFrame } from 'https://esm.sh/@farcaster/frame-wagmi-connector';
+import { farcasterMiniApp } from 'https://esm.sh/@farcaster/miniapp-wagmi-connector';
+
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
@@ -21,7 +27,7 @@ window.onload = () => {
 
 async function connectWallet() {
   try {
-    // 1. Try Base App internal frame wallet
+    // 1. Try Base App frame wallet
     if (window.ethereum && window.ethereum.isFrame) {
       provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
@@ -32,10 +38,10 @@ async function connectWallet() {
       return;
     }
 
-    // 2. Try Farcaster mobile wallet
-    if (window.ethereum && window.ethereum.isFarcaster) {
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
+    // 2. Try Farcaster Mini App (Mobile)
+    const miniProvider = await farcasterMiniApp({ rpcUrl: "https://mainnet.base.org" });
+    if (miniProvider) {
+      provider = new ethers.BrowserProvider(miniProvider);
       signer = await provider.getSigner();
       contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
       const address = await signer.getAddress();
@@ -43,7 +49,7 @@ async function connectWallet() {
       return;
     }
 
-    // 3. Try MetaMask/Rabby
+    // 3. Try MetaMask / Rabby
     if (window.ethereum) {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       if (chainId !== "0x2105") {
