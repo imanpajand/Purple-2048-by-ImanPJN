@@ -45,13 +45,6 @@
   <!-- WalletConnect -->
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
 
-  <!-- Farcaster MiniApp SDK -->
-  <script type="module">
-    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk'
-    window.addEventListener("load", async () => {
-      await sdk.actions.ready();
-    });
-  </script>
 </head>
 
 <body>
@@ -94,7 +87,7 @@
 
   <!-- Ethers & App Logic -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.3/dist/ethers.umd.min.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 
   <!-- Enable Wallet Button After Modules Loaded -->
   <script>
