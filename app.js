@@ -93,7 +93,7 @@ async function sendGM() {
       gasLimit: 100000
     });
     const receipt = await tx.wait();
-    if (receipt.status === 1) {
+    if (receipt?.status === 1) {
       alert("✅GM به خودت عزیزم");
       await new Promise(res => setTimeout(res, 2000));
       loadLeaderboard();
@@ -102,7 +102,11 @@ async function sendGM() {
     }
   } catch (err) {
     console.error("GM Error:", err);
-    alert("❌ ارسال GM با خطا مواجه شد.");
+    if (err?.code === 4200 || err?.message?.includes("unsupported")) {
+      alert("❌ کیف پول از این نوع تراکنش پشتیبانی نمی‌کند.");
+    } else {
+      alert("❌ ارسال GM با خطا مواجه شد.");
+    }
   }
 }
 
@@ -116,7 +120,7 @@ async function submitScore(e) {
       gasLimit: 100000
     });
     const receipt = await tx.wait();
-    if (receipt.status === 1) {
+    if (receipt?.status === 1) {
       await new Promise(res => setTimeout(res, 2000));
       alert("🎯 امتیازت ثبت شد خوشگله!");
       document.getElementById("playerName").value = "";
@@ -127,9 +131,15 @@ async function submitScore(e) {
     }
   } catch (err) {
     console.error("Submit Error:", err);
-    alert("❌ ثبت امتیاز با خطا مواجه شد.");
+    if (err?.code === 4200 || err?.message?.includes("unsupported")) {
+      alert("❌ کیف پول از این نوع تراکنش پشتیبانی نمی‌کند.");
+    } else {
+      alert("❌ ثبت امتیاز با خطا مواجه شد.");
+    }
   }
 }
+
+// سایر توابع (loadLeaderboard، toggleLeaderboard، game logic...) بدون تغییر
 
 
 
