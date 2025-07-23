@@ -127,9 +127,6 @@ async function submitScore(e) {
   }
 }
 
-// سایر توابع (loadLeaderboard، toggleLeaderboard، game logic...) بدون تغییر
-
-
 
 async function loadLeaderboard() {
   if (!provider) {
