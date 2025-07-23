@@ -50,17 +50,19 @@
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.3/dist/ethers.umd.min.js"></script>
 
     <!-- Farcaster SDK before app.js -->
-    <script type="module">
-      import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-      window.sdk = sdk;
-      window.addEventListener("load", async () => {
-        try {
-          await sdk.actions.ready();
-        } catch (err) {
-          console.error("SDK Ready Error:", err);
-        }
-      });
-    </script>
+<script type="module">
+  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+  window.sdk = sdk;
+
+  window.addEventListener("load", async () => {
+    try {
+      await sdk.actions.ready();
+      await sdk.actions.suggestAddMiniApp(); // 👈 این خط پیشنهاد رو میاره
+    } catch (err) {
+      console.error("SDK Error:", err);
+    }
+  });
+</script>
   </head>
 
   <body>
