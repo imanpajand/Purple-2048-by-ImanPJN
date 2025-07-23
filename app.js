@@ -1,11 +1,5 @@
 // Purple 2048 by ImanPJN - app.js
 
-import { createConfig, http } from 'https://esm.sh/wagmi';
-import { WagmiProvider } from 'https://esm.sh/wagmi';
-import { base } from 'https://esm.sh/wagmi/chains';
-import { farcasterFrame } from 'https://esm.sh/@farcaster/frame-wagmi-connector';
-import { farcasterMiniApp } from 'https://esm.sh/@farcaster/miniapp-wagmi-connector';
-
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
@@ -23,82 +17,97 @@ window.onload = () => {
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
+  loadWalletModules();
 };
 
-async function connectWallet() {
+async function loadWalletModules() {
   try {
-    // 1. Try Base App frame wallet
-    if (window.ethereum && window.ethereum.isFrame) {
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = await provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const address = await signer.getAddress();
-      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-      return;
-    }
+    const [wagmi, chains, mini, ethersPkg, WalletConnectProvider] = await Promise.all([
+      import('https://esm.sh/wagmi'),
+      import('https://esm.sh/wagmi/chains'),
+      import('https://esm.sh/@farcaster/miniapp-wagmi-connector'),
+      import('https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.min.js'),
+      import('https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js')
+    ]);
 
-    // 2. Try Farcaster Mini App (Mobile)
-    const miniProvider = await farcasterMiniApp({ rpcUrl: "https://mainnet.base.org" });
-    if (miniProvider) {
-      provider = new ethers.BrowserProvider(miniProvider);
-      signer = await provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const address = await signer.getAddress();
-      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-      return;
-    }
-
-    // 3. Try MetaMask / Rabby
-    if (window.ethereum) {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      if (chainId !== "0x2105") {
-        try {
-          await window.ethereum.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x2105" }],
-          });
-          return connectWallet();
-        } catch (switchError) {
-          if (switchError.code === 4902) {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [{
-                chainId: "0x2105",
-                chainName: "Base Mainnet",
-                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-                rpcUrls: ["https://mainnet.base.org"],
-                blockExplorerUrls: ["https://basescan.org"],
-              }],
-            });
-            return connectWallet();
-          }
+    window.connectWallet = async function () {
+      try {
+        // 1. Try Base Frame Wallet
+        if (window.ethereum && window.ethereum.isFrame) {
+          provider = new ethers.BrowserProvider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = await provider.getSigner();
+          contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+          const address = await signer.getAddress();
+          document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+          return;
         }
+
+        // 2. Try Farcaster Mini App
+        const miniProvider = await mini.farcasterMiniApp({ rpcUrl: "https://mainnet.base.org" });
+        if (miniProvider) {
+          provider = new ethers.BrowserProvider(miniProvider);
+          signer = await provider.getSigner();
+          contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+          const address = await signer.getAddress();
+          document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+          return;
+        }
+
+        // 3. Try MetaMask / Rabby
+        if (window.ethereum) {
+          const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+          if (chainId !== "0x2105") {
+            try {
+              await window.ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: "0x2105" }],
+              });
+              return connectWallet();
+            } catch (switchError) {
+              if (switchError.code === 4902) {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [{
+                    chainId: "0x2105",
+                    chainName: "Base Mainnet",
+                    nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                    rpcUrls: ["https://mainnet.base.org"],
+                    blockExplorerUrls: ["https://basescan.org"],
+                  }],
+                });
+                return connectWallet();
+              }
+            }
+          }
+          provider = new ethers.BrowserProvider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = await provider.getSigner();
+          contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+          const address = await signer.getAddress();
+          document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+          return;
+        }
+
+        // 4. WalletConnect
+        const wc = new WalletConnectProvider.default({
+          rpc: { 8453: "https://mainnet.base.org" },
+          chainId: 8453
+        });
+        await wc.enable();
+        provider = new ethers.BrowserProvider(wc);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const address = await signer.getAddress();
+        document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+
+      } catch (err) {
+        console.error("Connect Error:", err);
+        alert("❌ اتصال کیف پول با خطا مواجه شد.");
       }
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = await provider.getSigner();
-      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-      const address = await signer.getAddress();
-      document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-      return;
     }
-
-    // 4. WalletConnect fallback
-    const walletConnectProvider = new WalletConnectProvider.default({
-      rpc: { 8453: "https://mainnet.base.org" },
-      chainId: 8453
-    });
-    await walletConnectProvider.enable();
-    provider = new ethers.BrowserProvider(walletConnectProvider);
-    signer = await provider.getSigner();
-    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-    const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-
   } catch (err) {
-    console.error("Connect Error:", err);
-    alert("❌ اتصال کیف پول با خطا مواجه شد.");
+    console.error("Module load error:", err);
   }
 }
 
