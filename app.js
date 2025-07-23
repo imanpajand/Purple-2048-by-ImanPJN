@@ -38,8 +38,8 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Rabby or MetaMask
-    else if (window.ethereum) {
+    // 2. Injected Wallets like Rabby or MetaMask
+    else if (window.ethereum && !eth) {
       eth = window.ethereum;
       const chainId = await eth.request({ method: 'eth_chainId' });
       if (chainId !== "0x2105") {
@@ -67,16 +67,26 @@ async function connectWallet() {
       }
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
-    // 3. Farcaster Mobile Wallet via sdk.wallet.getEthereumProvider()
-    else if (window.sdk?.wallet?.getEthereumProvider) {
+    // 3. Farcaster MiniApp Wallet (Mobile)
+    else if (window.sdk?.wallet?.getEthereumProvider && !eth) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
-        console.log("🟣 Farcaster Mobile Wallet via MiniApp SDK Detected");
+        console.log("📱 Farcaster MiniApp Wallet Detected");
       } catch (err) {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-    // 4. WalletConnect fallback
+
+    // 4. If no provider found, fallback to injected wallets via window.ethereum.providers
+    if (!eth && window.ethereum?.providers?.length) {
+      const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
+      if (injected) {
+        eth = injected;
+        console.log("🌐 Fallback to first injected provider");
+      }
+    }
+
+    // 5. Last resort: WalletConnect (optional)
     if (!eth) {
       const wc = new WalletConnectProvider.default({
         rpc: { 8453: "https://mainnet.base.org" },
@@ -87,7 +97,7 @@ async function connectWallet() {
       console.log("🔗 WalletConnect fallback used");
     }
 
-    if (!eth) throw new Error("No wallet found");
+    if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
