@@ -43,11 +43,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;700&display=swap" rel="stylesheet" />
 
-    <!-- WalletConnect (required before app.js) -->
+    <!-- WalletConnect (must load before app.js) -->
     <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
 
-    <!-- ethers (required before app.js) -->
+    <!-- ethers.js (must load before app.js) -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.14.3/dist/ethers.umd.min.js"></script>
+
+    <!-- Farcaster SDK: باید حتما قبل app.js اجرا شه -->
+    <script type="module">
+      import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+      window.sdk = sdk;
+      window.addEventListener("load", async () => {
+        try {
+          await sdk.actions.ready();
+        } catch (err) {
+          console.error("SDK Ready Error:", err);
+        }
+      });
+    </script>
   </head>
 
   <body>
@@ -88,7 +101,7 @@
       <source src="music/purple-chill.mp3" type="audio/mpeg" />
     </audio>
 
-    <!-- Load app.js as a module -->
+    <!-- Load your main app logic -->
     <script type="module" src="app.js"></script>
   </body>
 </html>
