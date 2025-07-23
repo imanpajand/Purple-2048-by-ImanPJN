@@ -22,11 +22,10 @@ window.onload = () => {
 
 async function loadWalletModules() {
   try {
-    const [wagmi, chains, mini, ethersPkg, WalletConnectProvider] = await Promise.all([
+    const [wagmi, chains, mini, WalletConnectProvider] = await Promise.all([
       import('https://esm.sh/wagmi'),
       import('https://esm.sh/wagmi/chains'),
       import('https://esm.sh/@farcaster/miniapp-wagmi-connector'),
-      import('https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.min.js'),
       import('https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js')
     ]);
 
@@ -111,6 +110,19 @@ async function loadWalletModules() {
   }
 }
 
+
+async function sendGM() {
+  if (!contract) return alert("اول کیف پول رو وصل کن");
+  try {
+    const tx = await contract.gm("Gm to Iman", 0);
+    await tx.wait();
+    alert("✅GM به خودت عزیزم");
+    loadLeaderboard();
+  } catch (err) {
+    console.error("GM Error:", err);
+    alert("❌ ارسال GM با خطا مواجه شد.");
+  }
+}
 
 async function submitScore(e) {
   e.preventDefault();
