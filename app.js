@@ -1,4 +1,3 @@
-
 // Purple 2048 by ImanPJN - app.js
 
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
@@ -79,7 +78,7 @@ async function connectWallet() {
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText = ✅ ${address.slice(0, 6)}...${address.slice(-4)};
+    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
   } catch (err) {
     console.error("Connect Error:", err);
