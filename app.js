@@ -40,8 +40,12 @@ async function connectWallet() {
     }
     // 2. Farcaster Mobile Wallet via sdk.wallet.getEthereumProvider()
     else if (window.sdk?.wallet?.getEthereumProvider) {
-      eth = await window.sdk.wallet.getEthereumProvider();
-      console.log("🟣 Farcaster Mobile Wallet via MiniApp SDK Detected");
+      try {
+        eth = await window.sdk.wallet.getEthereumProvider();
+        console.log("🟣 Farcaster Mobile Wallet via MiniApp SDK Detected");
+      } catch (err) {
+        console.warn("⚠️ Farcaster provider error:", err);
+      }
     }
     // 3. MetaMask / Rabby
     else if (window.ethereum) {
@@ -128,7 +132,6 @@ async function submitScore(e) {
     alert("❌ ثبت امتیاز با خطا مواجه شد.");
   }
 }
-
 
 async function loadLeaderboard() {
   if (!provider) {
