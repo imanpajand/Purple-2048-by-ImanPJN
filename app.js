@@ -26,6 +26,7 @@ window.onload = async () => {
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
+  document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 };
 
 async function connectWallet() {
@@ -37,10 +38,10 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Farcaster Mobile Wallet
-    else if (window.farcaster && window.farcaster.ethereum) {
-      eth = window.farcaster.ethereum;
-      console.log("🟣 Farcaster Mobile Wallet Detected");
+    // 2. Farcaster Mobile Wallet via sdk.wallet.getEthereumProvider()
+    else if (window.sdk?.wallet?.getEthereumProvider) {
+      eth = await window.sdk.wallet.getEthereumProvider();
+      console.log("🟣 Farcaster Mobile Wallet via MiniApp SDK Detected");
     }
     // 3. MetaMask / Rabby
     else if (window.ethereum) {
@@ -97,7 +98,6 @@ async function connectWallet() {
   }
 }
 
-document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
