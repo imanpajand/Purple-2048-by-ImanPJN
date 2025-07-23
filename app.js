@@ -12,6 +12,19 @@ let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 window.onload = async () => {
+  // ۱. بازی بلافاصله در شروع لود می‌شود
+  initGame();
+  setupControls();
+
+  // ۲. همه دکمه‌ها و رویدادها تنظیم می‌شوند
+  document.getElementById("scoreForm").addEventListener("submit", submitScore);
+  document.getElementById("gmButton").addEventListener("click", sendGM);
+  document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
+  
+  // دکمه اتصال کیف پول دیگر بازی را ری‌استارت نمی‌کند
+  document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
+
+  // ۳. آماده‌سازی SDK فارکستر (در صورت وجود)
   try {
     if (window.sdk?.actions?.ready) {
       await window.sdk.actions.ready();
@@ -21,18 +34,9 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
-  setupControls();
-  document.getElementById("scoreForm").addEventListener("submit", submitScore);
-  document.getElementById("gmButton").addEventListener("click", sendGM);
-  document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
-  document.getElementById("connectWalletBtn").addEventListener("click", async () => {
-    await connectWallet();
-    initGame();
-  });
-
+  // ۴. تلاش برای اتصال خودکار کیف پول در پس‌زمینه (بازی را متوقف نمی‌کند)
   if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
     await connectWallet();
-    initGame();
   }
 };
 
