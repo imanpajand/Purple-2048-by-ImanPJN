@@ -45,17 +45,17 @@ async function connectWallet() {
     }
     // 3. MetaMask / Rabby
     else if (window.ethereum) {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      eth = window.ethereum;
+      const chainId = await eth.request({ method: 'eth_chainId' });
       if (chainId !== "0x2105") {
         try {
-          await window.ethereum.request({
+          await eth.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: "0x2105" }],
           });
-          return connectWallet();
         } catch (switchError) {
           if (switchError.code === 4902) {
-            await window.ethereum.request({
+            await eth.request({
               method: "wallet_addEthereumChain",
               params: [{
                 chainId: "0x2105",
@@ -65,11 +65,11 @@ async function connectWallet() {
                 blockExplorerUrls: ["https://basescan.org"],
               }],
             });
-            return connectWallet();
+          } else {
+            throw switchError;
           }
         }
       }
-      eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
     // 4. WalletConnect fallback
@@ -97,7 +97,6 @@ async function connectWallet() {
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
-
 
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
@@ -129,6 +128,7 @@ async function submitScore(e) {
     alert("❌ ثبت امتیاز با خطا مواجه شد.");
   }
 }
+
 
 async function loadLeaderboard() {
   if (!provider) {
