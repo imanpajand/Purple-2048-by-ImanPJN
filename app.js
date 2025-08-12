@@ -1,5 +1,3 @@
-
-
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
@@ -332,5 +330,6 @@ function canMove() {
   }
   return false;
 }
+
 
 
