@@ -1,4 +1,4 @@
-// Purple 2048 by ImanPJN - app.js
+
 
 const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
@@ -332,4 +332,5 @@ function canMove() {
   }
   return false;
 }
+
 
