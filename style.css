@@ -202,9 +202,9 @@ input[type="text"] {
   100% { transform: scale(1); opacity: 1; }
 }
 @keyframes tile-merge {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.25); }
-  100% { transform: scale(1); }
+  0%   { transform: scale(1); box-shadow: 0 0 10px rgba(255, 255, 255, 0); } /* Start with no glow */
+  50%  { transform: scale(1.25); box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); } /* Grow and glow */
+  100% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 255, 255, 0); } /* Shrink back, glow fades */
 }
 
 
@@ -286,6 +286,7 @@ input[type="text"] {
   .tile { font-size: 1.5rem; }
   #game { gap: 10px; }
 }
+
 
 
 
