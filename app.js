@@ -9,6 +9,18 @@ let currentScore = 0;
 let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
+// --- ADD: Base RPC ---
+const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
+let baseProvider;
+
+function initBaseProvider() {
+  if (!baseProvider) {
+    baseProvider = new ethers.JsonRpcProvider(BASE_RPC_URL);
+    console.log("✅ Base RPC provider initialized");
+  }
+  return baseProvider;
+}
+
 window.onload = async () => {
   // Load
   initGame();
@@ -148,11 +160,10 @@ async function submitScore(e) {
 
 
 async function loadLeaderboard() {
-  if (!provider) {
-    provider = new ethers.BrowserProvider(window.ethereum);
-  }
-  const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-  const latestBlock = await provider.getBlockNumber();
+  // استفاده از provider متصل به کیف پول یا fallback به RPC اختصاصی Base
+  const providerToUse = provider || initBaseProvider();
+  const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, providerToUse);
+
   const logs = await readContract.queryFilter("GM");
   const leaderboard = {};
   logs.forEach(log => {
@@ -162,6 +173,7 @@ async function loadLeaderboard() {
       leaderboard[name] = score;
     }
   });
+
   const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
   const lbDiv = document.getElementById("leaderboard");
   lbDiv.innerHTML = "<h3>🏆 Leaderboard</h3>";
@@ -346,4 +358,5 @@ function canMove() {
   }
   return false;
 }
+
 
