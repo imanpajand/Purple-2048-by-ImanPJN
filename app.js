@@ -10,7 +10,7 @@ let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 // --- ADD: Base RPC ---
-const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
+const BASE_RPC_URL = "https://billowing-young-lake.base-mainnet.quiknode.pro/a75e2cc8970a34a9fc3851ee12b1f189fc2ae64f";
 let baseProvider;
 
 function initBaseProvider() {
@@ -358,5 +358,6 @@ function canMove() {
   }
   return false;
 }
+
 
 
