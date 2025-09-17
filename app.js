@@ -10,14 +10,19 @@ let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 window.onload = async () => {
+  // Load
   initGame();
   setupControls();
 
+  // Button
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
+  
+  // WalletConnect Button 
   document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
+  // Farcaster SDK
   try {
     if (window.sdk?.actions?.ready) {
       await window.sdk.actions.ready();
@@ -27,6 +32,7 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
+  // Retry Wallet
   if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
     await connectWallet();
   }
@@ -36,10 +42,13 @@ async function connectWallet() {
   try {
     let eth = null;
 
+    // 1. Base App Frame
     if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
-    } else if (window.ethereum?.providers?.length) {
+    }
+    // 2. Injected Wallets like rabby
+    else if (window.ethereum?.providers?.length) {
       const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
       if (injected) {
         eth = injected;
@@ -48,7 +57,9 @@ async function connectWallet() {
     } else if (window.ethereum) {
       eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
-    } else if (window.sdk?.wallet?.getEthereumProvider) {
+    }
+    // 3. Farcaster MiniApp Mobile
+    else if (window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
         console.log("📱 Farcaster MiniApp Wallet Detected");
@@ -56,7 +67,7 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-
+    // 4. Final fallback: generic injected (no WalletConnect)
     if (!eth && window.ethereum) {
       eth = window.ethereum;
       console.log("🌐 Fallback to generic injected wallet");
@@ -80,7 +91,9 @@ async function connectWallet() {
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
-    const tx = await contract.gm("Gm to Iman", 0, { gasLimit: 100000 });
+    const tx = await contract.gm("Gm to Iman", 0, {
+      gasLimit: 100000
+    });
     await tx.wait();
     alert("✅GM به خودت عزیزم");
     await new Promise(res => setTimeout(res, 2000));
@@ -99,20 +112,24 @@ async function submitScore(e) {
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("نام بازیکن وارد کن");
   try {
-    const tx = await contract.gm(name, currentScore, { gasLimit: 100000 });
+    const tx = await contract.gm(name, currentScore, {
+      gasLimit: 100000
+    });
     await tx.wait();
-    alert("🎯 امتیازت ثبت شد!");
+    alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   } catch (err) {
     console.error("Submit Error:", err);
-    alert("🎯 امتیازت ثبت شد!");
+    alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   }
 }
+
+
 
 async function loadLeaderboard() {
   if (!provider) {
@@ -163,11 +180,10 @@ function updateScoreDisplay() {
 
 // ----------------- GAME LOGIC ------------------
 let grid = [];
-let tilePositions = {}; // New object to store tile positions for animation
 
 function initGame() {
   grid = Array.from({ length: 4 }, () => Array(4).fill(0));
-  tilePositions = {};
+  tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
   addRandomTile();
   addRandomTile();
   currentScore = 0;
@@ -181,6 +197,7 @@ function resetGame() {
 }
 
 function setupControls() {
+  // بخش مربوط به کیبورد بدون تغییر باقی می‌ماند
   window.onkeydown = (e) => {
     if (gameOver) return;
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
@@ -189,8 +206,11 @@ function setupControls() {
     }
   };
 
-  const gameBoard = document.getElementById("game");
+  // --- تغییرات در بخش لمسی ---
+  const gameBoard = document.getElementById("game"); // رویدادها را به خود بورد بازی متصل می‌کنیم
   let startX, startY;
+
+  // برای اینکه preventDefault کار کند، گزینه passive باید false باشد
   const touchOptions = { passive: false };
 
   gameBoard.addEventListener("touchstart", (e) => {
@@ -199,6 +219,7 @@ function setupControls() {
   }, touchOptions);
 
   gameBoard.addEventListener("touchmove", (e) => {
+    // این خط کلیدی است: از اسکرول یا ناوبری مرورگر هنگام حرکت انگشت جلوگیری می‌کند
     e.preventDefault();
   }, touchOptions);
 
@@ -223,157 +244,75 @@ function addRandomTile() {
   );
   if (empty.length === 0) return;
   const [r, c] = empty[Math.floor(Math.random() * empty.length)];
-  const value = Math.random() < 0.9 ? 2 : 4;
-  grid[r][c] = value;
-  // Store the position of the new tile
-  if (!tilePositions[`${r}-${c}`]) {
-    tilePositions[`${r}-${c}`] = { value: value, r: r, c: c, isNew: true };
-  } else {
-    tilePositions[`${r}-${c}`].value = value;
-    tilePositions[`${r}-${c}`].isNew = true;
-  }
+  grid[r][c] = Math.random() < 0.9 ? 2 : 4;
 }
 
 function updateGameBoard() {
   const gameDiv = document.getElementById("game");
-  // First, clear old tiles but keep them in memory for animation
-  const existingTiles = Array.from(gameDiv.children);
-
-  // Generate new tiles and set up animations
-  const newTilesHTML = [];
-  for (let r = 0; r < 4; r++) {
-    for (let c = 0; c < 4; c++) {
-      const val = grid[r][c];
-      const tileValue = val > 0 ? val : "";
+  gameDiv.innerHTML = "";
+  grid.forEach((row, r) =>
+    row.forEach((val, c) => {
       const tile = document.createElement("div");
-      tile.className = `tile tile-${val}`;
-      tile.setAttribute("data-value", tileValue);
-      // Set initial position for new tiles to animate from
-      tile.style.transform = `translate(${c * 100}%, ${r * 100}%)`;
-      if (val > 0) {
-        tile.innerText = tileValue;
-      }
-      newTilesHTML.push(tile.outerHTML);
-    }
-  }
-
-  // A small delay to ensure the DOM is updated before we start animations
-  setTimeout(() => {
-    gameDiv.innerHTML = newTilesHTML.join("");
-    // Re-apply classes for animation after they are in the DOM
-    const tiles = Array.from(gameDiv.children);
-    let index = 0;
-    for (let r = 0; r < 4; r++) {
-      for (let c = 0; c < 4; c++) {
-        const val = grid[r][c];
-        const prevTile = tilePositions[`${r}-${c}`];
-        const currentTile = tiles[index];
-
-        if (val > 0) {
-          if (prevTile && prevTile.isMerged) {
-            currentTile.classList.add('merge');
-          } else if (prevTile && prevTile.isNew) {
-            currentTile.classList.add('new-tile');
-          }
-        }
-        index++;
-      }
-    }
-  }, 0);
+      const isNew = val > 0 && !tileExistsPreviously[r][c];
+      tile.className = `tile tile-${val}${isNew ? ' new' : ''}`;
+      tile.setAttribute("data-value", val > 0 ? val : "");
+      gameDiv.appendChild(tile);
+    })
+  );
 }
 
-
 function move(direction) {
-  const prevGrid = JSON.parse(JSON.stringify(grid));
-  let moved = false;
-  let scoreIncrease = 0;
-
-  const combine = (row) => {
+  const clone = JSON.parse(JSON.stringify(grid));
+  const merged = Array.from({ length: 4 }, () => Array(4).fill(false));
+  const combine = (row, rIndex) => {
     let arr = row.filter(Boolean);
-    let merged = Array(arr.length).fill(false);
     for (let i = 0; i < arr.length - 1; i++) {
       if (arr[i] === arr[i + 1]) {
         arr[i] *= 2;
-        scoreIncrease += arr[i];
+        currentScore += arr[i];
         arr[i + 1] = 0;
-        merged[i] = true;
+        merged[rIndex][i] = true;
       }
     }
-    const newArr = arr.filter(Boolean);
-    const result = newArr.concat(Array(4 - newArr.length).fill(0));
-    return { result, merged };
+    return arr.filter(Boolean).concat(Array(4 - arr.filter(Boolean).length).fill(0));
   };
-
-  const getPos = (i, j, direction) => {
-    if (direction === "ArrowLeft") return { r: i, c: j };
-    if (direction === "ArrowRight") return { r: i, c: 3 - j };
-    if (direction === "ArrowUp") return { r: j, c: i };
-    if (direction === "ArrowDown") return { r: 3 - j, c: i };
-    return { r: i, c: j };
-  };
-
-  const getPreviousPositions = () => {
-    const prevPositions = {};
-    for (let r = 0; r < 4; r++) {
-      for (let c = 0; c < 4; c++) {
-        if (prevGrid[r][c] > 0) {
-          prevPositions[`${r}-${c}`] = prevGrid[r][c];
-        }
-      }
-    }
-    return prevPositions;
-  };
-
-  const prevPositions = getPreviousPositions();
-  const newTilePositions = {};
-
   for (let i = 0; i < 4; i++) {
     let row;
     switch (direction) {
       case "ArrowLeft":
-        row = grid[i];
+        grid[i] = combine(grid[i], i);
         break;
       case "ArrowRight":
         row = grid[i].slice().reverse();
+        grid[i] = combine(row, i).reverse();
         break;
       case "ArrowUp":
         row = grid.map(r => r[i]);
+        const colUp = combine(row, i);
+        grid.forEach((r, j) => (r[i] = colUp[j]));
         break;
       case "ArrowDown":
         row = grid.map(r => r[i]).reverse();
+        const colDown = combine(row, i).reverse();
+        grid.forEach((r, j) => (r[i] = colDown[j]));
         break;
     }
-
-    const oldRow = JSON.stringify(row);
-    const { result, merged } = combine(row);
-
-    if (JSON.stringify(result) !== oldRow) {
-      moved = true;
-    }
-
-    // Update grid and store tile information for animation
-    for (let j = 0; j < 4; j++) {
-      const { r, c } = getPos(i, j, direction);
-      grid[r][c] = result[j];
-      if (result[j] > 0) {
-        newTilePositions[`${r}-${c}`] = {
-          value: result[j],
-          r,
-          c,
-          isNew: false,
-          isMerged: merged[j]
-        };
-      }
-    }
   }
-
-  if (moved) {
-    currentScore += scoreIncrease;
-    tilePositions = newTilePositions;
+  if (JSON.stringify(grid) !== JSON.stringify(clone)) {
+    tileExistsPreviously = clone.map(row => row.map(cell => cell > 0));
     addRandomTile();
     updateGameBoard();
+    const tiles = document.querySelectorAll('.tile');
+    let index = 0;
+    grid.forEach((row, r) =>
+      row.forEach((val, c) => {
+        if (val !== 0 && merged[r][c]) {
+          tiles[index].classList.add('merge');
+        }
+        index++;
+      })
+    );
     updateScoreDisplay();
-
     if (!canMove()) {
       gameOver = true;
       alert("💀 متاسفانه Game Over شدی! اما میتونی امتیازتو ثبت کنی.");
