@@ -160,35 +160,20 @@ async function submitScore(e) {
 
 
 async function loadLeaderboard() {
-  const providerToUse = provider || initBaseProvider();
-  const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, providerToUse);
-
-  const latest = await providerToUse.getBlockNumber();
-  const step = 50000; // هر بار 50k بلاک
-  let from = 0;
-  let allLogs = [];
-
-  while (from <= latest) {
-    const to = Math.min(from + step, latest);
-    try {
-      const chunk = await readContract.queryFilter("GM", from, to);
-      allLogs = allLogs.concat(chunk);
-    } catch (err) {
-      console.warn("Chunk fetch error", from, to, err);
-      await new Promise(r => setTimeout(r, 500)); // کمی delay قبل از retry
-    }
-    from = to + 1;
+  if (!provider) {
+    provider = new ethers.BrowserProvider(window.ethereum);
   }
-
+  const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+  const latestBlock = await provider.getBlockNumber();
+  const logs = await readContract.queryFilter("GM");
   const leaderboard = {};
-  allLogs.forEach(log => {
+  logs.forEach(log => {
     const name = log.args.name;
     const score = Number(log.args.score);
     if (!leaderboard[name] || score > leaderboard[name]) {
       leaderboard[name] = score;
     }
   });
-
   const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
   const lbDiv = document.getElementById("leaderboard");
   lbDiv.innerHTML = "<h3>🏆 Leaderboard</h3>";
@@ -199,8 +184,6 @@ async function loadLeaderboard() {
       lbDiv.innerHTML += `<div>${i + 1}. <strong>${name}</strong>: ${score}</div>`;
     });
   }
-}
-
 }
 
 function toggleLeaderboard() {
@@ -375,6 +358,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
