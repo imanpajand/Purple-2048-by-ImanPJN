@@ -165,47 +165,51 @@ input[type="text"] {
 
 /* --- Game Board --- */
 #game {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin: 8px 0;
+  display: block; /* Change from grid to block */
+  margin: 8px 0;
+  position: relative; /* Add this: Crucial for positioning the absolute tiles */
+  width: 440px; /* Example size, adjust as needed */
+  height: 440px; /* Example size, adjust as needed */
 }
 .tile {
-  width: 100%;
-  padding-top: 100%;
-  border-radius: 6px;
-  position: relative;
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #fff;
-  backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  /* Change this section to work with absolute positioning */
+  position: absolute; /* Add this */
+  width: 100px; /* Change to a fixed size */
+  height: 100px; /* Change to a fixed size */
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #fff;
+  border-radius: 6px;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease, color 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .tile::after {
-  content: attr(data-value);
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
+  content: attr(data-value);
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-/* --- Animation --- */
-.tile.new {
-  animation: tile-pop 200ms ease-in;
+/* --- Animation (Updated) --- */
+.new-tile {
+  animation: pop-in 200ms ease-out;
 }
-.tile.merge {
-  animation: tile-merge 200ms cubic-bezier(0, 0.2, 0, 1.5);
+.merge {
+  animation: merge-pulse 200ms ease-out;
 }
-@keyframes tile-pop {
-  0%   { transform: scale(0.3); opacity: 0; }
-  80%  { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes pop-in {
+  0% { transform: scale(0.5) translate(-50%, -50%); opacity: 0; }
+  100% { transform: scale(1) translate(-50%, -50%); opacity: 1; }
 }
-@keyframes tile-merge {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.25); }
-  100% { transform: scale(1); }
+@keyframes merge-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 
@@ -286,3 +290,4 @@ input[type="text"] {
   .tile { font-size: 1.5rem; }
   #game { gap: 10px; }
 }
+
