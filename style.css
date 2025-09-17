@@ -178,10 +178,9 @@ input[type="text"] {
   font-size: 1.3rem;
   font-weight: bold;
   color: #fff;
-  backdrop-filter: blur(4px);
   background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+  transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
 }
 .tile::after {
   content: attr(data-value);
@@ -304,6 +303,7 @@ input[type="text"] {
   .tile { font-size: 1.5rem; }
   #game { gap: 10px; }
 }
+
 
 
 
