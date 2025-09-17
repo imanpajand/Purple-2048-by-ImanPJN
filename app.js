@@ -144,13 +144,13 @@ async function submitScore(e) {
       gasLimit: 100000
     });
     await tx.wait();
-    alert("🎯 امتیازت ثبت شد خوشگله!");
+    alert("🎯 امتیازت ثبت شد!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   } catch (err) {
     console.error("Submit Error:", err);
-    alert("🎯 امتیازت ثبت شد خوشگله!");
+    alert("🎯 امتیازت ثبت شد!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
@@ -160,13 +160,28 @@ async function submitScore(e) {
 
 
 async function loadLeaderboard() {
-  // استفاده از provider متصل به کیف پول یا fallback به RPC اختصاصی Base
   const providerToUse = provider || initBaseProvider();
   const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, providerToUse);
 
-  const logs = await readContract.queryFilter("GM");
+  const latest = await providerToUse.getBlockNumber();
+  const step = 50000; // هر بار 50k بلاک
+  let from = 0;
+  let allLogs = [];
+
+  while (from <= latest) {
+    const to = Math.min(from + step, latest);
+    try {
+      const chunk = await readContract.queryFilter("GM", from, to);
+      allLogs = allLogs.concat(chunk);
+    } catch (err) {
+      console.warn("Chunk fetch error", from, to, err);
+      await new Promise(r => setTimeout(r, 500)); // کمی delay قبل از retry
+    }
+    from = to + 1;
+  }
+
   const leaderboard = {};
-  logs.forEach(log => {
+  allLogs.forEach(log => {
     const name = log.args.name;
     const score = Number(log.args.score);
     if (!leaderboard[name] || score > leaderboard[name]) {
@@ -184,6 +199,8 @@ async function loadLeaderboard() {
       lbDiv.innerHTML += `<div>${i + 1}. <strong>${name}</strong>: ${score}</div>`;
     });
   }
+}
+
 }
 
 function toggleLeaderboard() {
@@ -358,6 +375,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
