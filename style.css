@@ -213,6 +213,15 @@ input[type="text"] {
     transform: scale(1.25);
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
   }
+  70% {
+    transform: scale(0.95) rotate(2deg); /* Added subtle shake */
+  }
+  80% {
+    transform: scale(1.05) rotate(-2deg); /* Added subtle shake */
+  }
+  90% {
+    transform: scale(0.98) rotate(1deg); /* Added subtle shake */
+  }
   100% {
     transform: scale(1);
     box-shadow: 0 0 0 rgba(255, 255, 255, 0);
@@ -297,6 +306,7 @@ input[type="text"] {
   .tile { font-size: 1.5rem; }
   #game { gap: 10px; }
 }
+
 
 
 
