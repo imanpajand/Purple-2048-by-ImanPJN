@@ -38,11 +38,7 @@ async function switchToBase(eth) {
           params: [{
             chainId: BASE_CHAIN_ID,
             chainName: "Base Mainnet",
-            nativeCurrency: {
-              name: "Ether",
-              symbol: "ETH",
-              decimals: 18
-            },
+            nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
             rpcUrls: [BASE_RPC_URL],
             blockExplorerUrls: ["https://basescan.org"]
           }]
@@ -50,9 +46,11 @@ async function switchToBase(eth) {
         console.log("✅ Base Mainnet added and switched");
       } catch (addError) {
         console.error("❌ Add Base Error:", addError);
+        throw addError; // ✅ خطا را پرتاب کن
       }
     } else {
       console.error("❌ Switch Error:", err);
+      throw err; // ✅ خطا را پرتاب کن تا تابع والد متوجه شود
     }
   }
 }
@@ -406,6 +404,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
