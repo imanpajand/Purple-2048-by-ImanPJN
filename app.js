@@ -9,49 +9,33 @@ let currentScore = 0;
 let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
-// --- START: ADDED CODE FOR BASE NETWORK SWITCH ---
-const BASE_CHAIN_ID_HEX = '0x2105'; // 8453 in decimal
+const BASE_CHAIN_ID_HEX = "0x2105"; // 8453
 const BASE_CHAIN_ID_DEC = 8453;
 
-/**
- * Prompts the user to switch their wallet's network to Base.
- * It does NOT attempt to add the network if it doesn't exist.
- */
-async function switchToBaseNetwork() {
-  if (!provider || !provider.send) {
-    console.error("Provider not available to switch network.");
-    return;
-  }
+async function switchToBaseNetwork(eth) {
   try {
-    await provider.send('wallet_switchEthereumChain', [{ chainId: BASE_CHAIN_ID_HEX }]);
+    await eth.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: BASE_CHAIN_ID_HEX }],
+    });
     console.log("✅ Switched to Base network");
   } catch (error) {
     console.error("❌ Failed to switch network:", error);
-    // Alert the user that they need to switch manually.
     alert("لطفاً شبکه خود را به صورت دستی به Base تغییر دهید.");
-    throw new Error("User rejected network switch or network is not available.");
+    throw error;
   }
 }
 
-/**
- * Checks if the wallet is on the Base network. If not, it triggers the switch.
- */
-async function ensureBaseNetwork() {
-  if (!provider) throw new Error("کیف پول متصل نیست.");
-  const network = await provider.getNetwork();
-  
-  if (network.chainId !== BigInt(BASE_CHAIN_ID_DEC)) {
-    console.log(`⚠️ Not on Base network (current: ${network.chainId}). Triggering switch...`);
-    await switchToBaseNetwork();
-    // Re-initialize signer and contract after a potential switch
-    signer = await provider.getSigner();
-    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+async function ensureBaseNetwork(eth) {
+  if (!eth) throw new Error("کیف پول متصل نیست.");
+  const chainId = await eth.request({ method: "eth_chainId" });
+
+  if (parseInt(chainId, 16) !== BASE_CHAIN_ID_DEC) {
+    console.log(`⚠️ Not on Base network (current: ${chainId}). Switching...`);
+    await switchToBaseNetwork(eth);
   }
 }
-// --- END: ADDED CODE FOR BASE NETWORK SWITCH ---
 
-
-// This part can be removed if you don't need a separate read-only provider
 const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
 let baseProvider;
 
@@ -107,25 +91,46 @@ window.onload = async () => {
   }
 };
 
+const BASE_CHAIN_ID_HEX = "0x2105"; // 8453
+
+async function switchToBase(eth) {
+  try {
+    await eth.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: BASE_CHAIN_ID_HEX }],
+    });
+    console.log("✅ Switched to Base network");
+  } catch (error) {
+    console.error("❌ Failed to switch network:", error);
+    alert("⚠️ لطفاً شبکه خود را به صورت دستی به Base تغییر دهید.");
+    throw error;
+  }
+}
+
 async function connectWallet() {
   try {
     let eth = null;
 
-    // Wallet detection logic (unchanged)
+    // 1. Base App Frame
     if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
+    // 2. Injected Wallets like Rabby/MetaMask
     else if (window.ethereum?.providers?.length) {
-      const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
+      const injected = window.ethereum.providers.find(
+        p => p.isMetaMask || p.isRabby || p.isPhantom
+      );
       if (injected) {
         eth = injected;
         console.log("🌐 Fallback to first injected provider");
       }
-    } else if (window.ethereum) {
+    }
+    else if (window.ethereum) {
       eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
+    // 3. Farcaster MiniApp Mobile
     else if (window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
@@ -134,6 +139,7 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
+    // 4. Final fallback
     if (!eth && window.ethereum) {
       eth = window.ethereum;
       console.log("🌐 Fallback to generic injected wallet");
@@ -141,23 +147,27 @@ async function connectWallet() {
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
+    // 🔹 قبل از ساخت provider، شبکه رو به Base سوییچ کن
+    const currentChainId = await eth.request({ method: "eth_chainId" });
+    if (currentChainId !== BASE_CHAIN_ID_HEX) {
+      console.log(`⚠️ Not on Base (chainId=${currentChainId}). Switching...`);
+      await switchToBase(eth);
+    }
+
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
-    
-    // --- MODIFIED: Force switch to Base network ---
-    await ensureBaseNetwork();
-    
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+    document.getElementById("connectWalletBtn").innerText =
+      `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
   } catch (err) {
     console.error("Connect Error:", err);
-    alert(err.message || "❌ اتصال کیف پول با خطا مواجه شد.");
+    alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
-
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
@@ -404,6 +414,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
