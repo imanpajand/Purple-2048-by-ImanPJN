@@ -1,4 +1,4 @@
-const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
+  const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
   "event GM(string name, uint256 score, address player, uint256 timestamp)"
@@ -10,7 +10,9 @@ let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 // --- ADD: Base RPC ---
+const BASE_CHAIN_ID = "0x2105"; // 8453
 const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
+
 let baseProvider;
 
 function initBaseProvider() {
@@ -19,6 +21,40 @@ function initBaseProvider() {
     console.log("✅ Base RPC provider initialized");
   }
   return baseProvider;
+}
+
+async function switchToBase(eth) {
+  try {
+    await eth.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: BASE_CHAIN_ID }],
+    });
+    console.log("✅ Switched to Base Mainnet");
+  } catch (err) {
+    if (err.code === 4902) {
+      try {
+        await eth.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: BASE_CHAIN_ID,
+            chainName: "Base Mainnet",
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18
+            },
+            rpcUrls: [BASE_RPC_URL],
+            blockExplorerUrls: ["https://basescan.org"]
+          }]
+        });
+        console.log("✅ Base Mainnet added and switched");
+      } catch (addError) {
+        console.error("❌ Add Base Error:", addError);
+      }
+    } else {
+      console.error("❌ Switch Error:", err);
+    }
+  }
 }
 
 window.onload = async () => {
@@ -75,7 +111,7 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Injected Wallets like rabby
+    // 2. Injected Wallets like Rabby/MetaMask
     else if (window.ethereum?.providers?.length) {
       const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
       if (injected) {
@@ -95,13 +131,15 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-    // 4. Final fallback: generic injected (no WalletConnect)
+    // 4. Final fallback
     if (!eth && window.ethereum) {
       eth = window.ethereum;
       console.log("🌐 Fallback to generic injected wallet");
     }
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
+
+     await switchToBase(eth);
 
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
@@ -358,6 +396,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
