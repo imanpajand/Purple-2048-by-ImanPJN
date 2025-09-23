@@ -1,4 +1,4 @@
-  const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
+const CONTRACT_ADDRESS = "0xc08279d91abf58a454a5cea8f072b7817409e485";
 const ABI = [
   "function gm(string name, uint256 score) external",
   "event GM(string name, uint256 score, address player, uint256 timestamp)"
@@ -9,70 +9,87 @@ let currentScore = 0;
 let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
-// --- ADD: Base RPC ---
-const BASE_CHAIN_ID = "0x2105"; // 8453
-const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
+// --- START: ADDED CODE FOR BASE NETWORK ---
+
+const BASE_CHAIN_ID_HEX = '0x2105'; // 8453 in decimal
+const BASE_CHAIN_ID_DEC = 8453;
+const BASE_NETWORK_CONFIG = {
+  chainId: BASE_CHAIN_ID_HEX,
+  chainName: 'Base',
+  nativeCurrency: {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: ['https://mainnet.base.org'],
+  blockExplorerUrls: ['https://basescan.org'],
+};
+
+/**
+ * Prompts the user to switch their wallet's network to Base.
+ * If Base is not added, it first prompts to add it.
+ */
+async function switchToBaseNetwork() {
+  if (!provider || !provider.send) {
+    throw new Error("Provider not available.");
+  }
+  try {
+    // Request to switch to the Base network
+    await provider.send('wallet_switchEthereumChain', [{ chainId: BASE_CHAIN_ID_HEX }]);
+    console.log("✅ Switched to Base network");
+  } catch (switchError) {
+    // Code 4902 indicates the chain has not been added to the wallet.
+    if (switchError.code === 4902) {
+      console.log("Base network not found in wallet. Attempting to add...");
+      try {
+        // Request to add the Base network
+        await provider.send('wallet_addEthereumChain', [BASE_NETWORK_CONFIG]);
+        console.log("✅ Base network added to wallet");
+        // Optional: you might want to retry switching after adding
+        await provider.send('wallet_switchEthereumChain', [{ chainId: BASE_CHAIN_ID_HEX }]);
+      } catch (addError) {
+        console.error("❌ Failed to add Base network:", addError);
+        throw new Error("خطا در افزودن شبکه Base به کیف پول.");
+      }
+    } else {
+      console.error("❌ Failed to switch network:", switchError);
+      throw new Error("خطا در تغییر شبکه به Base. لطفاً به صورت دستی شبکه را تغییر دهید.");
+    }
+  }
+}
+
+/**
+ * Checks if the wallet is on the Base network before a transaction.
+ * If not, it attempts to switch it.
+ */
+async function ensureBaseNetwork() {
+  if (!provider) throw new Error("کیف پول متصل نیست.");
+  const network = await provider.getNetwork();
+  // Use BigInt for chain ID comparison with ethers.js v6
+  if (network.chainId !== BigInt(BASE_CHAIN_ID_DEC)) {
+    console.log(`⚠️ Not on Base network (current: ${network.chainId}). Switching...`);
+    alert("شبکه شما روی Base نیست. لطفاً شبکه را به Base تغییر دهید.");
+    await switchToBaseNetwork();
+    
+    // After switching, it's a good practice to re-initialize the signer and contract
+    signer = await provider.getSigner();
+    contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+  }
+}
+
+// --- END: ADDED CODE FOR BASE NETWORK ---
+
 
 let baseProvider;
 
 function initBaseProvider() {
   if (!baseProvider) {
-    baseProvider = new ethers.JsonRpcProvider(BASE_RPC_URL);
+    baseProvider = new ethers.JsonRpcProvider("https://mainnet.base.org");
     console.log("✅ Base RPC provider initialized");
   }
   return baseProvider;
 }
 
-async function switchToBase(eth) {
-  try {
-    await eth.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: BASE_CHAIN_ID }],
-    });
-
-    // 🔑
-    const chainId = await eth.request({ method: "eth_chainId" });
-    if (chainId !== BASE_CHAIN_ID) {
-      throw new Error(`❌ Switch failed, current chainId = ${chainId}`);
-    }
-
-    console.log("✅ Switched to Base Mainnet");
-
-  } catch (err) {
-    //
-    if (err.code === 4902) {
-      try {
-        await eth.request({
-          method: "wallet_addEthereumChain",
-          params: [{
-            chainId: BASE_CHAIN_ID,
-            chainName: "Base Mainnet",
-            nativeCurrency: {
-              name: "Ether",
-              symbol: "ETH",
-              decimals: 18
-            },
-            rpcUrls: [BASE_RPC_URL],
-            blockExplorerUrls: ["https://basescan.org"]
-          }]
-        });
-
-        await eth.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: BASE_CHAIN_ID }],
-        });
-
-        console.log("✅ Base Mainnet added and switched");
-      } catch (addError) {
-        console.error("❌ Add Base Error:", addError);
-        throw addError;
-      }
-    } else {
-      console.error("❌ Switch Error:", err);
-      throw err;
-    }
-  }
-}
 
 window.onload = async () => {
   // Load
@@ -93,7 +110,6 @@ window.onload = async () => {
       await window.sdk.actions.ready();
       console.log("✅ sdk.actions.ready() called");
 
-      // --- Add Mini App Prompt for Farcaster only ---
       if (window.sdk?.actions?.addMiniApp) {
         try {
           await window.sdk.actions.addMiniApp();
@@ -123,12 +139,10 @@ async function connectWallet() {
   try {
     let eth = null;
 
-    // 1. Base App Frame
     if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Injected Wallets like Rabby/MetaMask
     else if (window.ethereum?.providers?.length) {
       const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
       if (injected) {
@@ -139,7 +153,6 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
-    // 3. Farcaster MiniApp Mobile
     else if (window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
@@ -148,7 +161,6 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-    // 4. Final fallback
     if (!eth && window.ethereum) {
       eth = window.ethereum;
       console.log("🌐 Fallback to generic injected wallet");
@@ -156,34 +168,29 @@ async function connectWallet() {
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
-    // 🔑 سوییچ به شبکه Base
-    await switchToBase(eth);
-
-    // 🔑 چک کن واقعا روی Base باشه
-    const chainId = await eth.request({ method: "eth_chainId" });
-    if (chainId !== BASE_CHAIN_ID) {
-      throw new Error(`❌ هنوز روی Base نیستی (chainId = ${chainId})`);
-    }
-
-    // 🔑 ساخت provider و signer
-    provider = new ethers.BrowserProvider(eth, "any"); // "any" = ساپورت تغییر شبکه
+    provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
+    
+    // --- MODIFIED: Force switch to Base network upon connection ---
+    await switchToBaseNetwork();
+
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText =
-      `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
   } catch (err) {
     console.error("Connect Error:", err);
-    alert("❌ اتصال کیف پول با خطا مواجه شد.");
+    alert(err.message || "❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
 
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
+    // --- MODIFIED: Ensure network is Base before sending transaction ---
+    await ensureBaseNetwork();
+
     const tx = await contract.gm("Gm to Iman", 0, {
       gasLimit: 100000
     });
@@ -205,6 +212,9 @@ async function submitScore(e) {
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("نام بازیکن وارد کن");
   try {
+    // --- MODIFIED: Ensure network is Base before sending transaction ---
+    await ensureBaseNetwork();
+
     const tx = await contract.gm(name, currentScore, {
       gasLimit: 100000
     });
@@ -423,6 +433,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
