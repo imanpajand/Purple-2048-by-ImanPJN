@@ -139,14 +139,24 @@ async function connectWallet() {
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
-     await switchToBase(eth);
+    // 🔑 سوییچ به شبکه Base
+    await switchToBase(eth);
 
-    provider = new ethers.BrowserProvider(eth);
+    // 🔑 چک کن واقعا روی Base باشه
+    const chainId = await eth.request({ method: "eth_chainId" });
+    if (chainId !== BASE_CHAIN_ID) {
+      throw new Error(`❌ هنوز روی Base نیستی (chainId = ${chainId})`);
+    }
+
+    // 🔑 ساخت provider و signer
+    provider = new ethers.BrowserProvider(eth, "any"); // "any" = ساپورت تغییر شبکه
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+    document.getElementById("connectWalletBtn").innerText =
+      `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
   } catch (err) {
     console.error("Connect Error:", err);
@@ -396,6 +406,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
