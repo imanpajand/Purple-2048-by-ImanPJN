@@ -9,87 +9,59 @@ let currentScore = 0;
 let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
-// --- START: ADDED CODE FOR BASE NETWORK ---
-
+// --- START: ADDED CODE FOR BASE NETWORK SWITCH ---
 const BASE_CHAIN_ID_HEX = '0x2105'; // 8453 in decimal
 const BASE_CHAIN_ID_DEC = 8453;
-const BASE_NETWORK_CONFIG = {
-  chainId: BASE_CHAIN_ID_HEX,
-  chainName: 'Base',
-  nativeCurrency: {
-    name: 'Ethereum',
-    symbol: 'ETH',
-    decimals: 18,
-  },
-  rpcUrls: ['https://mainnet.base.org'],
-  blockExplorerUrls: ['https://basescan.org'],
-};
 
 /**
  * Prompts the user to switch their wallet's network to Base.
- * If Base is not added, it first prompts to add it.
+ * It does NOT attempt to add the network if it doesn't exist.
  */
 async function switchToBaseNetwork() {
   if (!provider || !provider.send) {
-    throw new Error("Provider not available.");
+    console.error("Provider not available to switch network.");
+    return;
   }
   try {
-    // Request to switch to the Base network
     await provider.send('wallet_switchEthereumChain', [{ chainId: BASE_CHAIN_ID_HEX }]);
     console.log("✅ Switched to Base network");
-  } catch (switchError) {
-    // Code 4902 indicates the chain has not been added to the wallet.
-    if (switchError.code === 4902) {
-      console.log("Base network not found in wallet. Attempting to add...");
-      try {
-        // Request to add the Base network
-        await provider.send('wallet_addEthereumChain', [BASE_NETWORK_CONFIG]);
-        console.log("✅ Base network added to wallet");
-        // Optional: you might want to retry switching after adding
-        await provider.send('wallet_switchEthereumChain', [{ chainId: BASE_CHAIN_ID_HEX }]);
-      } catch (addError) {
-        console.error("❌ Failed to add Base network:", addError);
-        throw new Error("خطا در افزودن شبکه Base به کیف پول.");
-      }
-    } else {
-      console.error("❌ Failed to switch network:", switchError);
-      throw new Error("خطا در تغییر شبکه به Base. لطفاً به صورت دستی شبکه را تغییر دهید.");
-    }
+  } catch (error) {
+    console.error("❌ Failed to switch network:", error);
+    // Alert the user that they need to switch manually.
+    alert("لطفاً شبکه خود را به صورت دستی به Base تغییر دهید.");
+    throw new Error("User rejected network switch or network is not available.");
   }
 }
 
 /**
- * Checks if the wallet is on the Base network before a transaction.
- * If not, it attempts to switch it.
+ * Checks if the wallet is on the Base network. If not, it triggers the switch.
  */
 async function ensureBaseNetwork() {
   if (!provider) throw new Error("کیف پول متصل نیست.");
   const network = await provider.getNetwork();
-  // Use BigInt for chain ID comparison with ethers.js v6
+  
   if (network.chainId !== BigInt(BASE_CHAIN_ID_DEC)) {
-    console.log(`⚠️ Not on Base network (current: ${network.chainId}). Switching...`);
-    alert("شبکه شما روی Base نیست. لطفاً شبکه را به Base تغییر دهید.");
+    console.log(`⚠️ Not on Base network (current: ${network.chainId}). Triggering switch...`);
     await switchToBaseNetwork();
-    
-    // After switching, it's a good practice to re-initialize the signer and contract
+    // Re-initialize signer and contract after a potential switch
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
   }
 }
+// --- END: ADDED CODE FOR BASE NETWORK SWITCH ---
 
-// --- END: ADDED CODE FOR BASE NETWORK ---
 
-
+// This part can be removed if you don't need a separate read-only provider
+const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
 let baseProvider;
 
 function initBaseProvider() {
   if (!baseProvider) {
-    baseProvider = new ethers.JsonRpcProvider("https://mainnet.base.org");
+    baseProvider = new ethers.JsonRpcProvider(BASE_RPC_URL);
     console.log("✅ Base RPC provider initialized");
   }
   return baseProvider;
 }
-
 
 window.onload = async () => {
   // Load
@@ -104,7 +76,7 @@ window.onload = async () => {
   // WalletConnect Button 
   document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
-    // Farcaster SDK
+    // Farcaster SDK (unchanged)
   try {
     if (window.sdk?.actions?.ready) {
       await window.sdk.actions.ready();
@@ -129,7 +101,7 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
-  // Retry Wallet
+  // Auto-connect if wallet is available
   if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
     await connectWallet();
   }
@@ -139,6 +111,7 @@ async function connectWallet() {
   try {
     let eth = null;
 
+    // Wallet detection logic (unchanged)
     if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
@@ -171,9 +144,9 @@ async function connectWallet() {
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
     
-    // --- MODIFIED: Force switch to Base network upon connection ---
-    await switchToBaseNetwork();
-
+    // --- MODIFIED: Force switch to Base network ---
+    await ensureBaseNetwork();
+    
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     const address = await signer.getAddress();
@@ -188,7 +161,7 @@ async function connectWallet() {
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
-    // --- MODIFIED: Ensure network is Base before sending transaction ---
+    // --- MODIFIED: Ensure network is Base before transaction ---
     await ensureBaseNetwork();
 
     const tx = await contract.gm("Gm to Iman", 0, {
@@ -212,7 +185,7 @@ async function submitScore(e) {
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("نام بازیکن وارد کن");
   try {
-    // --- MODIFIED: Ensure network is Base before sending transaction ---
+    // --- MODIFIED: Ensure network is Base before transaction ---
     await ensureBaseNetwork();
 
     const tx = await contract.gm(name, currentScore, {
@@ -231,8 +204,6 @@ async function submitScore(e) {
     resetGame();
   }
 }
-
-
 
 async function loadLeaderboard() {
   if (!provider) {
@@ -433,6 +404,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
