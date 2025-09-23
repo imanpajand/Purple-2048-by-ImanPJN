@@ -29,8 +29,17 @@ async function switchToBase(eth) {
       method: "wallet_switchEthereumChain",
       params: [{ chainId: BASE_CHAIN_ID }],
     });
+
+    // 🔑
+    const chainId = await eth.request({ method: "eth_chainId" });
+    if (chainId !== BASE_CHAIN_ID) {
+      throw new Error(`❌ Switch failed, current chainId = ${chainId}`);
+    }
+
     console.log("✅ Switched to Base Mainnet");
+
   } catch (err) {
+    //
     if (err.code === 4902) {
       try {
         await eth.request({
@@ -38,19 +47,29 @@ async function switchToBase(eth) {
           params: [{
             chainId: BASE_CHAIN_ID,
             chainName: "Base Mainnet",
-            nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18
+            },
             rpcUrls: [BASE_RPC_URL],
             blockExplorerUrls: ["https://basescan.org"]
           }]
         });
+
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: BASE_CHAIN_ID }],
+        });
+
         console.log("✅ Base Mainnet added and switched");
       } catch (addError) {
         console.error("❌ Add Base Error:", addError);
-        throw addError; // ✅ خطا را پرتاب کن
+        throw addError;
       }
     } else {
       console.error("❌ Switch Error:", err);
-      throw err; // ✅ خطا را پرتاب کن تا تابع والد متوجه شود
+      throw err;
     }
   }
 }
@@ -404,6 +423,7 @@ function canMove() {
   }
   return false;
 }
+
 
 
 
