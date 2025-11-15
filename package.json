@@ -1,5 +1,14 @@
 {
-  "name": "purple-2048",
+  "name": "purple-2048-by-imanpjn",
   "version": "1.0.0",
-  "type": "module"
+  "description": "Purple 2048 on Base with Farcaster MiniApp integration",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "vercel dev",
+    "build": "echo 'no build step required'"
+  },
+  "author": "ImanPJN",
+  "license": "MIT",
+  "dependencies": {}
 }
