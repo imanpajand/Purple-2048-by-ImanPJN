@@ -18,17 +18,14 @@ window.onload = async () => {
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
-  
-  // WalletConnect Button 
   document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
-    // Farcaster SDK
+  // Farcaster SDK
   try {
     if (window.sdk?.actions?.ready) {
       await window.sdk.actions.ready();
       console.log("✅ sdk.actions.ready() called");
 
-      // --- Add Mini App Prompt for Farcaster only ---
       if (window.sdk?.actions?.addMiniApp) {
         try {
           await window.sdk.actions.addMiniApp();
@@ -48,10 +45,10 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
-  // Retry Wallet
-  if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
-    await connectWallet();
-  }
+  // ❌ این بخش حذف شد تا از conflict جلوگیری بشه
+  // if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
+  //   await connectWallet();
+  // }
 };
 
 async function connectWallet() {
@@ -315,8 +312,10 @@ function move(direction) {
     }
   }
   if (JSON.stringify(grid) !== JSON.stringify(clone)) {
-    tileExistsPreviously = clone.map(row => row.map(cell => cell > 0));
     addRandomTile();
+    // ✅ اصلاح tileExistsPreviously بعد از addRandomTile
+    tileExistsPreviously = grid.map(row => row.map(cell => cell > 0));
+
     updateGameBoard();
     const tiles = document.querySelectorAll('.tile');
     let index = 0;
@@ -346,3 +345,4 @@ function canMove() {
   }
   return false;
 }
+
