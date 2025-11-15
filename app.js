@@ -9,44 +9,6 @@ let currentScore = 0;
 let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
-const BASE_CHAIN_ID_HEX = "0x2105"; // 8453
-const BASE_CHAIN_ID_DEC = 8453;
-
-async function switchToBaseNetwork(eth) {
-  try {
-    await eth.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: BASE_CHAIN_ID_HEX }],
-    });
-    console.log("✅ Switched to Base network");
-  } catch (error) {
-    console.error("❌ Failed to switch network:", error);
-    alert("لطفاً شبکه خود را به صورت دستی به Base تغییر دهید.");
-    throw error;
-  }
-}
-
-async function ensureBaseNetwork(eth) {
-  if (!eth) throw new Error("کیف پول متصل نیست.");
-  const chainId = await eth.request({ method: "eth_chainId" });
-
-  if (parseInt(chainId, 16) !== BASE_CHAIN_ID_DEC) {
-    console.log(`⚠️ Not on Base network (current: ${chainId}). Switching...`);
-    await switchToBaseNetwork(eth);
-  }
-}
-
-const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
-let baseProvider;
-
-function initBaseProvider() {
-  if (!baseProvider) {
-    baseProvider = new ethers.JsonRpcProvider(BASE_RPC_URL);
-    console.log("✅ Base RPC provider initialized");
-  }
-  return baseProvider;
-}
-
 window.onload = async () => {
   // Load
   initGame();
@@ -60,12 +22,13 @@ window.onload = async () => {
   // WalletConnect Button 
   document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
-    // Farcaster SDK (unchanged)
+    // Farcaster SDK
   try {
     if (window.sdk?.actions?.ready) {
       await window.sdk.actions.ready();
       console.log("✅ sdk.actions.ready() called");
 
+      // --- Add Mini App Prompt for Farcaster only ---
       if (window.sdk?.actions?.addMiniApp) {
         try {
           await window.sdk.actions.addMiniApp();
@@ -85,27 +48,11 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
-  // Auto-connect if wallet is available
+  // Retry Wallet
   if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
     await connectWallet();
   }
 };
-
-const BASE_CHAIN_ID_HEX = "0x2105"; // 8453
-
-async function switchToBase(eth) {
-  try {
-    await eth.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: BASE_CHAIN_ID_HEX }],
-    });
-    console.log("✅ Switched to Base network");
-  } catch (error) {
-    console.error("❌ Failed to switch network:", error);
-    alert("⚠️ لطفاً شبکه خود را به صورت دستی به Base تغییر دهید.");
-    throw error;
-  }
-}
 
 async function connectWallet() {
   try {
@@ -116,17 +63,14 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Injected Wallets like Rabby/MetaMask
+    // 2. Injected Wallets like rabby
     else if (window.ethereum?.providers?.length) {
-      const injected = window.ethereum.providers.find(
-        p => p.isMetaMask || p.isRabby || p.isPhantom
-      );
+      const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
       if (injected) {
         eth = injected;
         console.log("🌐 Fallback to first injected provider");
       }
-    }
-    else if (window.ethereum) {
+    } else if (window.ethereum) {
       eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
@@ -139,7 +83,7 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-    // 4. Final fallback
+    // 4. Final fallback: generic injected (no WalletConnect)
     if (!eth && window.ethereum) {
       eth = window.ethereum;
       console.log("🌐 Fallback to generic injected wallet");
@@ -147,33 +91,22 @@ async function connectWallet() {
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
-    // 🔹 قبل از ساخت provider، شبکه رو به Base سوییچ کن
-    const currentChainId = await eth.request({ method: "eth_chainId" });
-    if (currentChainId !== BASE_CHAIN_ID_HEX) {
-      console.log(`⚠️ Not on Base (chainId=${currentChainId}). Switching...`);
-      await switchToBase(eth);
-    }
-
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText =
-      `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
   } catch (err) {
     console.error("Connect Error:", err);
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
+
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
-    // --- MODIFIED: Ensure network is Base before transaction ---
-    await ensureBaseNetwork();
-
     const tx = await contract.gm("Gm to Iman", 0, {
       gasLimit: 100000
     });
@@ -195,25 +128,24 @@ async function submitScore(e) {
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("نام بازیکن وارد کن");
   try {
-    // --- MODIFIED: Ensure network is Base before transaction ---
-    await ensureBaseNetwork();
-
     const tx = await contract.gm(name, currentScore, {
       gasLimit: 100000
     });
     await tx.wait();
-    alert("🎯 امتیازت ثبت شد!");
+    alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   } catch (err) {
     console.error("Submit Error:", err);
-    alert("🎯 امتیازت ثبت شد!");
+    alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   }
 }
+
+
 
 async function loadLeaderboard() {
   if (!provider) {
@@ -414,16 +346,3 @@ function canMove() {
   }
   return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
