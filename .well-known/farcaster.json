@@ -4,6 +4,9 @@
     "payload": "eyJkb21haW4iOiJwdXJwbGUyMDQ4LnZlcmNlbC5hcHAifQ",
     "signature": "MHg2ZTEwY2EwZDczNWZmZjZjOGUwZTllNmZlZDFmOTBlOTY2MjcyZDMzNzcwN2FjZTY3NGM3ZWY4ZjdhZDAyODdkNWU1MTEwZDY2ODI1ZjQ5ZDk0YTFjNzIyMmE2NWRlY2ViZTAxY2FiMzUwMGQ1ZGVmNGEwMjE0ZmNjN2ZkZGUwZDFj"
   },
+  "miniapp": {
+    "name": "Purple 2048"
+  },
   "frame": {
     "name": "Purple 2048",
     "version": "1",
@@ -12,7 +15,7 @@
     "imageUrl": "https://purple2048.vercel.app/assets/favicon.jpg",
     "splashImageUrl": "https://purple2048.vercel.app/assets/favicon.jpg",
     "splashBackgroundColor": "#7F1B7E",
-    "subtitle": "Purple 2048 game on Base",
+    "subtitle": "2048 on Base by ImanPJN",
     "description": "Purple 2048 game on Base by ImanPJN",
     "primaryCategory": "games",
     "screenshotUrls": [
@@ -39,5 +42,8 @@
       "postUrl": "https://purple2048.vercel.app"
     },
     "webhookUrl": "https://purple2048.vercel.app/api/farcaster-webhook"
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x8Bbfcd7afCD9300D001610B852e16DC112608B18"
   }
 }
