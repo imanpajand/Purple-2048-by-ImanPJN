@@ -9,18 +9,6 @@ let currentScore = 0;
 let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
-// --- ADD: Base RPC ---
-const BASE_RPC_URL = "https://base-mainnet.g.alchemy.com/v2/00eGcxP8BSNOMYfThP9H1";
-let baseProvider;
-
-function initBaseProvider() {
-  if (!baseProvider) {
-    baseProvider = new ethers.JsonRpcProvider(BASE_RPC_URL);
-    console.log("✅ Base RPC provider initialized");
-  }
-  return baseProvider;
-}
-
 window.onload = async () => {
   // Load
   initGame();
@@ -144,13 +132,13 @@ async function submitScore(e) {
       gasLimit: 100000
     });
     await tx.wait();
-    alert("🎯 امتیازت ثبت شد!");
+    alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   } catch (err) {
     console.error("Submit Error:", err);
-    alert("🎯 امتیازت ثبت شد!");
+    alert("🎯 امتیازت ثبت شد خوشگله!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
@@ -358,8 +346,3 @@ function canMove() {
   }
   return false;
 }
-
-
-
-
-
