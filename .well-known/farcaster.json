@@ -10,9 +10,9 @@
     "name": "Purple 2048",
     "iconUrl": "https://purple2048.vercel.app/assets/favicon.png",
     "homeUrl": "https://purple2048.vercel.app",
-    "imageUrl": "https://purple2048.vercel.app/assets/favicon1.jpg",
+    "imageUrl": "https://purple2048.vercel.app/assets/favicon2.jpg",
 
-    "splashImageUrl": "https://purple2048.vercel.app/assets/favicon1.jpg",
+    "splashImageUrl": "https://purple2048.vercel.app/assets/favicon2.jpg",
     "splashBackgroundColor": "#7F1B7E",
 
     "subtitle": "2048 on Base by ImanPJN",
@@ -34,10 +34,10 @@
 
     "tagline": "Fun and addictive 2048 game!",
 
-    "heroImageUrl": "https://purple2048.vercel.app/assets/favicon1.jpg",
+    "heroImageUrl": "https://purple2048.vercel.app/assets/favicon2.jpg",
     "ogTitle": "Purple 2048",
     "ogDescription": "Play 2048 on base, save your score on-chain on top the leaderboard!",
-    "ogImageUrl": "https://purple2048.vercel.app/assets/favicon1.jpg",
+    "ogImageUrl": "https://purple2048.vercel.app/assets/favicon2.jpg",
 
     "castShareUrl": "https://purple2048.vercel.app/api/share",
 
