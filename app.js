@@ -132,13 +132,13 @@ async function submitScore(e) {
       gasLimit: 100000
     });
     await tx.wait();
-    alert("🎯 امتیازت ثبت شد خوشگله!");
+    alert("🎯 امتیازت ثبت شد!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
   } catch (err) {
     console.error("Submit Error:", err);
-    alert("🎯 امتیازت ثبت شد خوشگله!");
+    alert("🎯 امتیازت ثبت شد!");
     document.getElementById("playerName").value = "";
     loadLeaderboard();
     resetGame();
@@ -346,3 +346,4 @@ function canMove() {
   }
   return false;
 }
+
