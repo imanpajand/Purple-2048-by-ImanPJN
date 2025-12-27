@@ -11,6 +11,36 @@
 <meta property="og:url" content="https://purple2048.vercel.app/" />
 <meta name="twitter:card" content="summary_large_image" />
 
+    <!-- Farcaster Embed Meta Tags -->
+    <meta name="fc:miniapp" content='{
+      "version":"1",
+      "imageUrl":"https://purple2048.vercel.app/favicon2.jpg",
+      "button":{
+        "title":"🎮 Play Now!",
+        "action":{
+          "type":"launch_miniapp",
+          "name":"Purple 2048",
+          "url":"https://purple2048.vercel.app",
+          "splashImageUrl":"https://purple2048.vercel.app/assets/favicon.ico",
+          "splashBackgroundColor":"#7F1B7E"
+        }
+      }
+    }' />
+
+    <meta name="fc:frame" content='{
+      "version":"1",
+      "imageUrl":"https://purple2048.vercel.app/favicon2.jpg",
+      "button":{
+        "title":"🎮 Play Now!",
+        "action":{
+          "type":"launch_frame",
+          "name":"Purple 2048",
+          "url":"https://purple2048.vercel.app",
+          "splashImageUrl":"https://purple2048.vercel.app/assets/favicon.ico",
+          "splashBackgroundColor":"#7F1B7E"
+        }
+      }
+    }' />
 
     <!-- Style & Fonts -->
     <link rel="icon" href="/assets/favicon.ico" type="image/x-icon" />
@@ -83,5 +113,6 @@
     <script type="module" src="app.js"></script>
   </body>
 </html>
+
 
 
