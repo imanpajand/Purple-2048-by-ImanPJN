@@ -93,6 +93,39 @@ async function connectWallet() {
 
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
+
+    const network = await provider.getNetwork();
+
+    if (network.chainId !== 8453n) {
+      try {
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x2105" }]
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await eth.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x2105",
+              chainName: "Base",
+              nativeCurrency: {
+                name: "Ether",
+                symbol: "ETH",
+                decimals: 18
+              },
+              rpcUrls: ["https://mainnet.base.org"],
+              blockExplorerUrls: ["https://basescan.org"]
+            }]
+          });
+        } else {
+          throw switchError;
+        }
+      }
+
+      provider = new ethers.BrowserProvider(eth);
+    }
+
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     const address = await signer.getAddress();
