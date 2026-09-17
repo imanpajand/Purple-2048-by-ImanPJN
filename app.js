@@ -57,10 +57,12 @@ async function connectWallet() {
   try {
     let eth = null;
 
+    // 1. Base App Frame
     if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
+    // 2. Injected Wallets like rabby
     else if (window.ethereum?.providers?.length) {
       const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
       if (injected) {
@@ -71,6 +73,7 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
+    // 3. Farcaster MiniApp Mobile
     else if (window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
@@ -79,6 +82,7 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
+    // 4. Final fallback: generic injected
     if (!eth && window.ethereum) {
       eth = window.ethereum;
       console.log("🌐 Fallback to generic injected provider");
@@ -86,6 +90,7 @@ async function connectWallet() {
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
+    // 🔵 Switch wallet to Base Mainnet
     try {
       await eth.request({
         method: "wallet_switchEthereumChain",
@@ -96,6 +101,7 @@ async function connectWallet() {
 
     } catch (switchError) {
 
+      // Chain doesn't exist in wallet → add Base Mainnet
       if (switchError.code === 4902) {
         await eth.request({
           method: "wallet_addEthereumChain",
@@ -119,6 +125,7 @@ async function connectWallet() {
       }
     }
 
+    // Connect account after network is ready
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
 
