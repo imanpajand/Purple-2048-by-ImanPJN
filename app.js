@@ -57,24 +57,12 @@ async function connectWallet() {
   try {
     let eth = null;
 
-    // 1. Base App Frame
-    if (window.ethereum && window.ethereum.isFrame) {
+    if (window.ethereum?.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-    // 2. Injected Wallets like rabby
-    else if (window.ethereum?.providers?.length) {
-      const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
-      if (injected) {
-        eth = injected;
-        console.log("🌐 Fallback to first injected provider");
-      }
-    } else if (window.ethereum) {
-      eth = window.ethereum;
-      console.log("🦊 MetaMask or Rabby Wallet Detected");
-    }
-    // 3. Farcaster MiniApp Mobile
-    else if (window.sdk?.wallet?.getEthereumProvider) {
+
+    if (!eth && window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
         console.log("📱 Farcaster MiniApp Wallet Detected");
@@ -82,52 +70,58 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-    // 4. Final fallback: generic injected
+
+    if (!eth && window.ethereum?.providers?.length) {
+      const injected = window.ethereum.providers.find(
+        p => p.isRabby || p.isMetaMask || p.isPhantom
+      );
+      eth = injected || window.ethereum.providers[0];
+      console.log("🌐 Injected Wallet Detected");
+    }
+
     if (!eth && window.ethereum) {
       eth = window.ethereum;
-      console.log("🌐 Fallback to generic injected provider");
+      console.log("🌐 Generic Injected Wallet Detected");
     }
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
-    // 🔵 Switch wallet to Base Mainnet
-    try {
-      await eth.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0x2105" }]
-      });
-
-      console.log("🔵 Switched to Base Mainnet");
-
-    } catch (switchError) {
-
-      // Chain doesn't exist in wallet → add Base Mainnet
-      if (switchError.code === 4902) {
-        await eth.request({
-          method: "wallet_addEthereumChain",
-          params: [{
-            chainId: "0x2105",
-            chainName: "Base",
-            nativeCurrency: {
-              name: "Ether",
-              symbol: "ETH",
-              decimals: 18
-            },
-            rpcUrls: ["https://mainnet.base.org"],
-            blockExplorerUrls: ["https://basescan.org"]
-          }]
-        });
-
-        console.log("🔵 Base Mainnet added and selected");
-
-      } else {
-        throw switchError;
-      }
-    }
-
-    // Connect account after network is ready
     provider = new ethers.BrowserProvider(eth);
+
     await provider.send("eth_requestAccounts", []);
+
+    let network = await provider.getNetwork();
+
+    if (network.chainId !== 8453n) {
+      try {
+        await eth.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x2105" }]
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await eth.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: "0x2105",
+              chainName: "Base",
+              nativeCurrency: {
+                name: "Ether",
+                symbol: "ETH",
+                decimals: 18
+              },
+              rpcUrls: ["https://mainnet.base.org"],
+              blockExplorerUrls: ["https://basescan.org"]
+            }]
+          });
+        } else {
+          throw switchError;
+        }
+      }
+
+      provider = new ethers.BrowserProvider(eth);
+      await provider.send("eth_requestAccounts", []);
+    }
 
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
@@ -136,7 +130,6 @@ async function connectWallet() {
 
     document.getElementById("connectWalletBtn").innerText =
       `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
-
   } catch (err) {
     console.error("Connect Error:", err);
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
