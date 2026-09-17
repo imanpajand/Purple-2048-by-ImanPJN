@@ -83,27 +83,66 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-    // 4. Final fallback: generic injected (no WalletConnect)
+    // 4. Final fallback: generic injected
     if (!eth && window.ethereum) {
       eth = window.ethereum;
-      console.log("🌐 Fallback to generic injected wallet");
+      console.log("🌐 Fallback to generic injected provider");
     }
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
+    // 🔵 Switch wallet to Base Mainnet
+    try {
+      await eth.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x2105" }]
+      });
+
+      console.log("🔵 Switched to Base Mainnet");
+
+    } catch (switchError) {
+
+      // Chain doesn't exist in wallet → add Base Mainnet
+      if (switchError.code === 4902) {
+        await eth.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0x2105",
+            chainName: "Base",
+            nativeCurrency: {
+              name: "Ether",
+              symbol: "ETH",
+              decimals: 18
+            },
+            rpcUrls: ["https://mainnet.base.org"],
+            blockExplorerUrls: ["https://basescan.org"]
+          }]
+        });
+
+        console.log("🔵 Base Mainnet added and selected");
+
+      } else {
+        throw switchError;
+      }
+    }
+
+    // Connect account after network is ready
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
+
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
     const address = await signer.getAddress();
-    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
+
+    document.getElementById("connectWalletBtn").innerText =
+      `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
   } catch (err) {
     console.error("Connect Error:", err);
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
-
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
