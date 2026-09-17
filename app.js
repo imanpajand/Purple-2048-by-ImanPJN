@@ -57,12 +57,10 @@ async function connectWallet() {
   try {
     let eth = null;
 
-
     if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-  
     else if (window.ethereum?.providers?.length) {
       const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
       if (injected) {
@@ -73,7 +71,6 @@ async function connectWallet() {
       eth = window.ethereum;
       console.log("🦊 MetaMask or Rabby Wallet Detected");
     }
-
     else if (window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
@@ -82,14 +79,12 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-
     if (!eth && window.ethereum) {
       eth = window.ethereum;
       console.log("🌐 Fallback to generic injected provider");
     }
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
-
 
     try {
       await eth.request({
@@ -100,7 +95,6 @@ async function connectWallet() {
       console.log("🔵 Switched to Base Mainnet");
 
     } catch (switchError) {
-
 
       if (switchError.code === 4902) {
         await eth.request({
@@ -124,7 +118,6 @@ async function connectWallet() {
         throw switchError;
       }
     }
-
 
     provider = new ethers.BrowserProvider(eth);
     await provider.send("eth_requestAccounts", []);
@@ -384,4 +377,3 @@ function canMove() {
   }
   return false;
 }
-
