@@ -10,15 +10,16 @@ let gameOver = false;
 let tileExistsPreviously = Array.from({ length: 4 }, () => Array(4).fill(false));
 
 window.onload = async () => {
-
+  // Load
   initGame();
   setupControls();
 
+  // Button
   document.getElementById("scoreForm").addEventListener("submit", submitScore);
   document.getElementById("gmButton").addEventListener("click", sendGM);
   document.getElementById("leaderboardToggle").addEventListener("click", toggleLeaderboard);
   
-
+  // WalletConnect Button 
   document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
 
     // Farcaster SDK
@@ -27,7 +28,7 @@ window.onload = async () => {
       await window.sdk.actions.ready();
       console.log("✅ sdk.actions.ready() called");
 
-
+      // --- Add Mini App Prompt for Farcaster only ---
       if (window.sdk?.actions?.addMiniApp) {
         try {
           await window.sdk.actions.addMiniApp();
@@ -47,7 +48,7 @@ window.onload = async () => {
     console.error("❌ sdk ready error:", err);
   }
 
-
+  // Retry Wallet
   if (window.ethereum || window.sdk?.wallet?.getEthereumProvider) {
     await connectWallet();
   }
@@ -57,12 +58,24 @@ async function connectWallet() {
   try {
     let eth = null;
 
-    if (window.ethereum?.isFrame) {
+    // 1. Base App Frame
+    if (window.ethereum && window.ethereum.isFrame) {
       eth = window.ethereum;
       console.log("🟣 Base App Frame Wallet Detected");
     }
-
-    if (!eth && window.sdk?.wallet?.getEthereumProvider) {
+    // 2. Injected Wallets like rabby
+    else if (window.ethereum?.providers?.length) {
+      const injected = window.ethereum.providers.find(p => p.isMetaMask || p.isRabby || p.isPhantom);
+      if (injected) {
+        eth = injected;
+        console.log("🌐 Fallback to first injected provider");
+      }
+    } else if (window.ethereum) {
+      eth = window.ethereum;
+      console.log("🦊 MetaMask or Rabby Wallet Detected");
+    }
+    // 3. Farcaster MiniApp Mobile
+    else if (window.sdk?.wallet?.getEthereumProvider) {
       try {
         eth = await window.sdk.wallet.getEthereumProvider();
         console.log("📱 Farcaster MiniApp Wallet Detected");
@@ -70,71 +83,27 @@ async function connectWallet() {
         console.warn("⚠️ Farcaster provider error:", err);
       }
     }
-
-    if (!eth && window.ethereum?.providers?.length) {
-      const injected = window.ethereum.providers.find(
-        p => p.isRabby || p.isMetaMask || p.isPhantom
-      );
-      eth = injected || window.ethereum.providers[0];
-      console.log("🌐 Injected Wallet Detected");
-    }
-
+    // 4. Final fallback: generic injected (no WalletConnect)
     if (!eth && window.ethereum) {
       eth = window.ethereum;
-      console.log("🌐 Generic Injected Wallet Detected");
+      console.log("🌐 Fallback to generic injected wallet");
     }
 
     if (!eth) throw new Error("❌ هیچ کیف پولی پیدا نشد");
 
     provider = new ethers.BrowserProvider(eth);
-
     await provider.send("eth_requestAccounts", []);
-
-    let network = await provider.getNetwork();
-
-    if (network.chainId !== 8453n) {
-      try {
-        await eth.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x2105" }]
-        });
-      } catch (switchError) {
-        if (switchError.code === 4902) {
-          await eth.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0x2105",
-              chainName: "Base",
-              nativeCurrency: {
-                name: "Ether",
-                symbol: "ETH",
-                decimals: 18
-              },
-              rpcUrls: ["https://mainnet.base.org"],
-              blockExplorerUrls: ["https://basescan.org"]
-            }]
-          });
-        } else {
-          throw switchError;
-        }
-      }
-
-      provider = new ethers.BrowserProvider(eth);
-      await provider.send("eth_requestAccounts", []);
-    }
-
     signer = await provider.getSigner();
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
     const address = await signer.getAddress();
+    document.getElementById("connectWalletBtn").innerText = `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
 
-    document.getElementById("connectWalletBtn").innerText =
-      `✅ ${address.slice(0, 6)}...${address.slice(-4)}`;
   } catch (err) {
     console.error("Connect Error:", err);
     alert("❌ اتصال کیف پول با خطا مواجه شد.");
   }
 }
+
 async function sendGM() {
   if (!contract) return alert("اول کیف پول رو وصل کن");
   try {
@@ -244,7 +213,7 @@ function resetGame() {
 }
 
 function setupControls() {
-
+  // بخش مربوط به کیبورد بدون تغییر باقی می‌ماند
   window.onkeydown = (e) => {
     if (gameOver) return;
     if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
@@ -253,11 +222,11 @@ function setupControls() {
     }
   };
 
-
-  const gameBoard = document.getElementById("game");
+  // --- تغییرات در بخش لمسی ---
+  const gameBoard = document.getElementById("game"); // رویدادها را به خود بورد بازی متصل می‌کنیم
   let startX, startY;
 
-باشد
+  // برای اینکه preventDefault کار کند، گزینه passive باید false باشد
   const touchOptions = { passive: false };
 
   gameBoard.addEventListener("touchstart", (e) => {
@@ -266,7 +235,7 @@ function setupControls() {
   }, touchOptions);
 
   gameBoard.addEventListener("touchmove", (e) => {
-
+    // این خط کلیدی است: از اسکرول یا ناوبری مرورگر هنگام حرکت انگشت جلوگیری می‌کند
     e.preventDefault();
   }, touchOptions);
 
